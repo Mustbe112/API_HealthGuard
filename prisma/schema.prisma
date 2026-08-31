@@ -1,0 +1,145 @@
+// Prisma schema for the API testing/monitoring tool.
+//
+// SECURITY NOTES:
+// - User.passwordHash stores an Argon2 hash. Never store raw passwords.
+// - EnvironmentVariable.value stores an AES-256-GCM ciphertext (base64) when
+//   isSecret = true. It is ENCRYPTED, not hashed, because the test runner
+//   needs the real value to send in requests. See src/utils/crypto.ts.
+// - Non-secret variables (e.g. base_url) are stored as plain text since
+//   there is nothing to protect there.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   // Argon2 hash, never plaintext
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  projects Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  baseUrl   String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner       User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  variables   EnvironmentVariable[]
+  endpoints   Endpoint[]
+  testRuns    TestRun[]
+
+  @@index([ownerId])
+  @@map("projects")
+}
+
+// Stores auth tokens, API keys, custom headers, etc. used when calling
+// endpoints under test. Secret values are encrypted at rest.
+model EnvironmentVariable {
+  id        String   @id @default(uuid())
+  projectId String
+  key       String   // e.g. "API_TOKEN", "base_url"
+  value     String   // encrypted (if isSecret) or plain text
+  isSecret  Boolean  @default(true)
+  iv        String?  // AES-GCM IV, base64 (null when isSecret = false)
+  authTag   String?  // AES-GCM auth tag, base64 (null when isSecret = false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, key])
+  @@map("environment_variables")
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  PATCH
+  DELETE
+  HEAD
+  OPTIONS
+}
+
+model Endpoint {
+  id                   String     @id @default(uuid())
+  projectId            String
+  name                 String
+  method               HttpMethod
+  path                 String     // relative path, e.g. "/users/{id}"
+  requestSchema        Json?      // JSON schema for expected request body
+  responseSchema       Json?      // JSON schema for expected response body
+  expectedStatus       Int        @default(200)
+  documentedStatuses   Json?      // number[] of spec-documented (non-5xx) statuses
+  requiresAuth         Boolean    @default(false)
+  headers              Json?      // static headers to send (non-secret)
+  dependsOnId          String?    // for chained tests, e.g. DELETE depends on POST
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  dependsOn   Endpoint?      @relation("EndpointChain", fields: [dependsOnId], references: [id])
+  dependents  Endpoint[]     @relation("EndpointChain")
+  results     TestResult[]
+
+  @@index([projectId])
+  @@map("endpoints")
+}
+
+enum TestRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model TestRun {
+  id         String        @id @default(uuid())
+  projectId  String
+  status     TestRunStatus @default(PENDING)
+  dryRun     Boolean       @default(false)
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime      @default(now())
+
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  results TestResult[]
+
+  @@index([projectId])
+  @@map("test_runs")
+}
+
+model TestResult {
+  id             String   @id @default(uuid())
+  testRunId      String
+  endpointId     String
+  statusCode     Int?
+  responseTimeMs Int?
+  passed         Boolean  @default(false)
+  errorMessage   String?
+  responseBody   Json?
+  probe          Json?    // { sent, expected, proves } — zero-input probe metadata
+  createdAt      DateTime @default(now())
+
+  testRun  TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  endpoint Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([testRunId])
+  @@index([endpointId])
+  @@map("test_results")
+}

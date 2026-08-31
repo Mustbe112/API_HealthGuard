@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  /* Design tokens — API vitals/monitoring aesthetic, not a generic dashboard */
+  --ink: #0b1220;         /* page background — deep blue-black, not pure black */
+  --panel: #121b2e;       /* card/panel background */
+  --panel-raised: #172038; /* slightly raised surface (inputs, hovers) */
+  --line: #23324a;        /* borders/dividers */
+  --text: #e6ebf5;        /* primary text */
+  --text-muted: #8b99b3;  /* secondary text */
+  --accent: #5b8def;      /* primary action blue */
+  --accent-hover: #77a1f5;
+  --pass: #34d399;        /* signal: passed */
+  --fail: #f87171;        /* signal: failed */
+  --pending: #fbbf24;     /* signal: pending/skipped */
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-pass: var(--pass);
+  --color-fail: var(--fail);
+  --color-pending: var(--pending);
+
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+body {
+  background: var(--ink);
+  color: var(--text);
+}
