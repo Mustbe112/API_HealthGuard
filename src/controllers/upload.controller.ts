@@ -2,6 +2,7 @@ import { Request, Response, RequestHandler } from "express";
 import multer from "multer";
 import { prisma } from "../db/client";
 import { parseSpecFile, UnsupportedSpecError } from "../services/parsers";
+import { replaceProjectEndpoints } from "../services/endpoints.service";
 
 function asyncHandler(fn: RequestHandler): RequestHandler {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -41,27 +42,7 @@ async function uploadSpecHandler(req: Request, res: Response) {
     return res.status(422).json({ error: "No endpoints found in the uploaded file" });
   }
 
-  const created = await prisma.$transaction(async (tx) => {
-    await tx.endpoint.deleteMany({ where: { projectId } });
-    await tx.endpoint.createMany({
-      data: endpoints.map((e) => ({
-        projectId,
-        name: e.name,
-        method: e.method,
-        path: e.path,
-        expectedStatus: e.expectedStatus,
-        documentedStatuses: e.documentedStatuses,
-        requiresAuth: e.requiresAuth,
-        requestSchema: e.requestSchema as any,
-        responseSchema: e.responseSchema as any,
-        headers: e.headers as any,
-      })),
-    });
-    if (serverUrl) {
-      await tx.project.update({ where: { id: projectId }, data: { baseUrl: serverUrl } });
-    }
-    return tx.endpoint.findMany({ where: { projectId } });
-  });
+  const created = await replaceProjectEndpoints(projectId, endpoints, { serverUrl });
 
   const projectAfter = await prisma.project.findUnique({ where: { id: projectId } });
   return res.status(200).json({

@@ -23,12 +23,9 @@ function parseRawFile(buffer: Buffer, filename: string): any {
   }
 }
 
-export function parseSpecFile(
-  buffer: Buffer,
-  filename: string
+export function parseSpecDocument(
+  doc: unknown
 ): { endpoints: NormalizedEndpoint[]; format: "openapi" | "postman"; serverUrl?: string } {
-  const doc = parseRawFile(buffer, filename);
-
   if (looksLikeOpenApi(doc)) {
     return { endpoints: parseOpenApi(doc), format: "openapi", serverUrl: openApiServerUrl(doc) };
   }
@@ -40,6 +37,17 @@ export function parseSpecFile(
   throw new UnsupportedSpecError(
     "File is not a recognized OpenAPI (openapi/swagger + paths) or Postman Collection v2.x export."
   );
+}
+
+export function parseSpecText(text: string, filename = "spec.json") {
+  return parseSpecFile(Buffer.from(text, "utf8"), filename);
+}
+
+export function parseSpecFile(
+  buffer: Buffer,
+  filename: string
+): { endpoints: NormalizedEndpoint[]; format: "openapi" | "postman"; serverUrl?: string } {
+  return parseSpecDocument(parseRawFile(buffer, filename));
 }
 
 function openApiServerUrl(doc: any): string | undefined {

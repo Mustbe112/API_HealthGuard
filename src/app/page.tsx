@@ -258,10 +258,10 @@ function ProductPreview() {
               </tr>
             </thead>
             <tbody>
-              <PreviewRow method="GET" path="/health" sent="Nothing" status="200" passed />
-              <PreviewRow method="GET" path="/items/{id}" sent="A random fake UUID" status="404" passed />
-              <PreviewRow method="POST" path="/auth/register" sent="Throwaway account" status="404" passed={false} />
-              <PreviewRow method="POST" path="/items" sent="Valid token, empty body" status="400" passed />
+              <PreviewRow method="GET" path="/health" sent="Nothing" status="200" outcome="working" />
+              <PreviewRow method="GET" path="/items/{id}" sent="A random fake UUID" status="404" outcome="working" />
+              <PreviewRow method="GET" path="/orders" sent="No token" status="401" outcome="manual" />
+              <PreviewRow method="POST" path="/auth/register" sent="Throwaway account" status="500" outcome="broken" />
             </tbody>
           </table>
         </div>
@@ -275,14 +275,15 @@ function PreviewRow({
   path,
   sent,
   status,
-  passed,
+  outcome,
 }: {
   method: "GET" | "POST";
   path: string;
   sent: string;
   status: string;
-  passed: boolean;
+  outcome: "working" | "broken" | "manual";
 }) {
+  const tone = outcome === "working" ? "text-pass" : outcome === "broken" ? "text-fail" : "text-pending";
   return (
     <tr className="border-b border-line last:border-0">
       <td className="px-4 py-3">
@@ -292,9 +293,9 @@ function PreviewRow({
         </div>
       </td>
       <td className="hidden px-4 py-3 text-xs text-text-muted sm:table-cell">{sent}</td>
-      <td className={`px-4 py-3 font-mono text-xs ${passed ? "text-pass" : "text-fail"}`}>{status}</td>
+      <td className={`px-4 py-3 font-mono text-xs ${tone}`}>{status}</td>
       <td className="px-4 py-3">
-        <StatusBadge passed={passed} />
+        <StatusBadge outcome={outcome} />
       </td>
     </tr>
   );

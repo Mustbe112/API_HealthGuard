@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
+import { classifyOutcome, summarizeOutcomes, type ProbeOutcome } from "@/lib/outcome";
 import type { EnvVariable, Project, TestResult, TestRun } from "@/lib/types";
 import { Button } from "@/components/Button";
 import { MethodBadge } from "@/components/MethodBadge";
@@ -11,7 +12,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { LatencyBar } from "@/components/LatencyBar";
 import { EndpointTester } from "@/components/EndpointTester";
 
-type Filter = "broken" | "working" | "all";
+type Filter = "broken" | "working" | "manual" | "all";
 type Tab = "results" | "try";
 
 export default function ProjectDashboard({
@@ -32,6 +33,7 @@ export default function ProjectDashboard({
   const [savingVar, setSavingVar] = useState(false);
 
   const [uploading, setUploading] = useState(false);
+  const [discovering, setDiscovering] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,11 +73,22 @@ export default function ProjectDashboard({
     setRuns(testRuns);
   }, [token, projectId]);
 
+  const autoDiscovered = useRef(false);
+
   useEffect(() => {
     loadProject();
     loadVariables();
     loadRuns();
   }, [loadProject, loadVariables, loadRuns]);
+
+  useEffect(() => {
+    if (!token || !project || autoDiscovered.current) return;
+    if ((project.endpoints?.length ?? 0) > 0) return;
+    autoDiscovered.current = true;
+    void discoverFromBaseUrl();
+    // discoverFromBaseUrl is stable enough for a one-shot scan of an empty project
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, project]);
 
   useEffect(() => {
     if (!token || !selectedRun) return;
@@ -102,7 +115,7 @@ export default function ProjectDashboard({
     setRunning(true);
     setError(null);
     setTab("results");
-    setFilter("broken");
+    setFilter("all");
     try {
       const { testRun } = await api.triggerRun(token, projectId, dryRun);
       setSelectedRun(testRun);
@@ -160,6 +173,31 @@ export default function ProjectDashboard({
     setTab("results");
   }
 
+  async function discoverFromBaseUrl() {
+    if (!token) return;
+    setDiscovering(true);
+    setError(null);
+    setUploadMsg("Searching this host for a spec and live routes…");
+    try {
+      const res = await api.discoverSpec(token, projectId);
+      await loadProject();
+      if (res.count > 0) {
+        const via = res.specUrl ? ` from ${res.specUrl}` : ` (${res.source})`;
+        setUploadMsg(`Found ${res.count} endpoint(s)${via}. Running tests…`);
+        await startRun();
+      } else {
+        setUploadMsg(
+          res.error ??
+            "No endpoints found on this URL. Upload a spec, or check that the API is running."
+        );
+      }
+    } catch (err) {
+      setUploadMsg(err instanceof ApiError ? err.message : "Discovery failed");
+    } finally {
+      setDiscovering(false);
+    }
+  }
+
   async function handleSaveBaseUrl(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
@@ -168,9 +206,10 @@ export default function ProjectDashboard({
       const { project } = await api.updateProject(token, projectId, { baseUrl: baseUrlDraft });
       setProject(project);
       setEditingUrl(false);
+      setSavingUrl(false);
+      await discoverFromBaseUrl();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to update base URL");
-    } finally {
       setSavingUrl(false);
     }
   }
@@ -191,8 +230,10 @@ export default function ProjectDashboard({
 
   const results = selectedRun?.results ?? [];
   const maxMs = Math.max(1, ...results.map((r) => r.responseTimeMs ?? 0));
-  const workingCount = selectedRun?.workingCount ?? results.filter((r) => r.passed && r.statusCode !== null).length;
-  const brokenCount = selectedRun?.brokenCount ?? results.filter((r) => !r.passed).length;
+  const counts = summarizeOutcomes(results);
+  const workingCount = selectedRun?.workingCount ?? counts.workingCount;
+  const brokenCount = selectedRun?.brokenCount ?? counts.brokenCount;
+  const manualCount = selectedRun?.manualCount ?? counts.manualCount;
   const avgMs =
     results.filter((r) => r.responseTimeMs !== null).length > 0
       ? Math.round(
@@ -202,8 +243,10 @@ export default function ProjectDashboard({
       : null;
 
   const filtered = results.filter((r) => {
-    if (filter === "broken") return !r.passed;
-    if (filter === "working") return r.passed && r.statusCode !== null;
+    const outcome = classifyOutcome(r);
+    if (filter === "broken") return outcome === "broken";
+    if (filter === "working") return outcome === "working";
+    if (filter === "manual") return outcome === "manual";
     return true;
   });
 
@@ -254,21 +297,29 @@ export default function ProjectDashboard({
         <aside className="space-y-6">
           <section className="rounded-xl border border-line bg-panel p-4">
             <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-text-muted">
-              Spec file
+              Endpoints
             </h2>
+            <Button
+              variant="secondary"
+              onClick={() => void discoverFromBaseUrl()}
+              disabled={discovering || uploading || running}
+              className="mb-3 w-full"
+            >
+              {discovering ? "Searching…" : "Discover from base URL"}
+            </Button>
             <input
               ref={fileInputRef}
               type="file"
               accept=".json,.yaml,.yml"
               className="mb-3 w-full text-xs text-text-muted file:mr-2 file:rounded file:border-0 file:bg-panel-raised file:px-2 file:py-1 file:text-xs file:text-text"
             />
-            <Button variant="secondary" onClick={handleUpload} disabled={uploading || running} className="w-full">
-              {uploading ? "Uploading…" : "Upload & run"}
+            <Button variant="secondary" onClick={handleUpload} disabled={uploading || running || discovering} className="w-full">
+              {uploading ? "Uploading…" : "Upload spec & run"}
             </Button>
             {uploadMsg && <p className="mt-2 text-xs text-text-muted">{uploadMsg}</p>}
             <p className="mt-2 text-xs text-text-muted">
-              {project.endpoints?.length ?? 0} endpoint(s) loaded. Upload runs zero-input tests
-              automatically.
+              {project.endpoints?.length ?? 0} endpoint(s) loaded. Discovery scans the base URL
+              (OpenAPI first, then live JSON routes). Saving a new base URL scans again.
             </p>
           </section>
 
@@ -365,6 +416,8 @@ export default function ProjectDashboard({
                       <div className="mt-0.5 text-text-muted">
                         <span className="text-pass">{r.workingCount ?? 0} working</span>
                         {" · "}
+                        <span className="text-pending">{r.manualCount ?? 0} try</span>
+                        {" · "}
                         <span className="text-fail">{r.brokenCount ?? 0} broken</span>
                       </div>
                     )}
@@ -410,8 +463,9 @@ export default function ProjectDashboard({
                   </Button>
                 </div>
                 <p className="mt-3 text-xs leading-relaxed text-text-muted">
-                  Zero-input checks every route automatically. Use Try endpoints when you want
-                  to send real data, like Postman.
+                  Zero-input checks every route automatically. 401/403 means the route is up but
+                  needs a real login — use Try endpoints. 5xx is broken. 2xx (and expected 4xx
+                  like 400/404) is working.
                 </p>
               </div>
 
@@ -419,8 +473,9 @@ export default function ProjectDashboard({
 
               {selectedRun ? (
                 <>
-                  <div className="mb-4 grid grid-cols-3 gap-3">
+                  <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <Vital label="Working" value={String(workingCount)} tone="pass" />
+                    <Vital label="Try manually" value={String(manualCount)} tone="pending" />
                     <Vital label="Broken" value={String(brokenCount)} tone="fail" />
                     <Vital
                       label="Avg latency"
@@ -435,9 +490,12 @@ export default function ProjectDashboard({
                     </p>
                   )}
 
-                  <div className="mb-3 flex gap-1">
+                  <div className="mb-3 flex flex-wrap gap-1">
                     <FilterChip active={filter === "broken"} onClick={() => setFilter("broken")}>
                       Broken ({brokenCount})
+                    </FilterChip>
+                    <FilterChip active={filter === "manual"} onClick={() => setFilter("manual")}>
+                      Try manually ({manualCount})
                     </FilterChip>
                     <FilterChip active={filter === "working"} onClick={() => setFilter("working")}>
                       Working ({workingCount})
@@ -454,6 +512,8 @@ export default function ProjectDashboard({
                           ? "Still running — no matching probes yet."
                           : filter === "broken"
                             ? "Nothing broken in this run."
+                            : filter === "manual"
+                              ? "Nothing needs a manual try in this run."
                             : "No results in this filter."}
                       </div>
                     ) : (
@@ -511,8 +571,11 @@ function ResultRow({
   onToggle: () => void;
   onTry: () => void;
 }) {
-  const skipped = r.statusCode === null && r.passed;
+  const outcome = classifyOutcome(r);
   const req = r.probe?.request;
+  const detailTone =
+    outcome === "broken" ? "text-fail" : outcome === "manual" ? "text-pending" : "text-text-muted";
+  const latencyTone = outcome === "broken" ? "fail" : outcome === "working" ? "pass" : "pending";
 
   return (
     <>
@@ -525,25 +588,39 @@ function ResultRow({
             <MethodBadge method={r.endpoint.method} />
             <span className="font-mono text-xs">{r.endpoint.path}</span>
           </div>
-          {!r.passed && r.errorMessage && (
-            <p className="mt-1 text-xs text-fail">{r.errorMessage}</p>
+          {r.errorMessage && outcome !== "working" && (
+            <p className={`mt-1 text-xs ${detailTone}`}>{r.errorMessage}</p>
           )}
-          {r.passed && r.probe?.caution && (
+          {outcome === "working" && r.probe?.caution && (
             <p className="mt-1 text-xs text-pending">{r.probe.caution}</p>
           )}
-          {r.passed && r.probe?.proves && !r.probe.caution && (
+          {outcome === "working" && r.probe?.proves && !r.probe.caution && (
             <p className="mt-1 text-xs text-text-muted">{r.probe.proves}</p>
           )}
         </td>
         <td className="px-4 py-3 text-xs text-text-muted">{r.probe?.sent ?? "—"}</td>
-        <td className={`px-4 py-3 font-mono text-xs ${statusTone(r.statusCode, r.passed)}`}>
+        <td className={`px-4 py-3 font-mono text-xs ${statusTone(r.statusCode, outcome)}`}>
           {r.statusCode ?? "—"}
         </td>
         <td className="px-4 py-3">
-          <LatencyBar ms={r.responseTimeMs} maxMs={maxMs} passed={r.passed} />
+          <LatencyBar ms={r.responseTimeMs} maxMs={maxMs} tone={latencyTone} />
         </td>
         <td className="px-4 py-3">
-          <StatusBadge passed={r.passed} skipped={skipped} />
+          <div className="flex flex-col items-start gap-1">
+            <StatusBadge outcome={outcome} />
+            {outcome === "manual" && (
+              <button
+                type="button"
+                className="text-[11px] text-accent hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTry();
+                }}
+              >
+                Open Try
+              </button>
+            )}
+          </div>
         </td>
       </tr>
       {expanded && (
@@ -612,15 +689,31 @@ function prettyJson(value: unknown): string {
   }
 }
 
-function statusTone(status: number | null, passed: boolean): string {
+function statusTone(status: number | null, outcome: ProbeOutcome): string {
   if (status === null) return "text-text-muted";
-  if (status >= 500) return "text-fail";
-  if (passed) return "text-pass";
+  if (outcome === "broken") return "text-fail";
+  if (outcome === "manual") return "text-pending";
+  if (outcome === "working") return "text-pass";
   return "text-text-muted";
 }
 
-function Vital({ label, value, tone }: { label: string; value: string; tone: "pass" | "fail" | "neutral" }) {
-  const color = tone === "pass" ? "text-pass" : tone === "fail" ? "text-fail" : "text-text";
+function Vital({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "pass" | "fail" | "pending" | "neutral";
+}) {
+  const color =
+    tone === "pass"
+      ? "text-pass"
+      : tone === "fail"
+        ? "text-fail"
+        : tone === "pending"
+          ? "text-pending"
+          : "text-text";
   return (
     <div className="rounded-xl border border-line bg-panel p-4">
       <div className="text-xs uppercase tracking-wide text-text-muted">{label}</div>

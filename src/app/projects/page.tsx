@@ -38,10 +38,7 @@ export default function ProjectsPage() {
     setError(null);
     try {
       const { project } = await api.createProject(token, name, baseUrl);
-      setProjects((prev) => [project, ...(prev ?? [])]);
-      setShowCreate(false);
-      setName("");
-      setBaseUrl("");
+      router.push(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to create project");
     } finally {
@@ -100,11 +97,15 @@ export default function ProjectsPage() {
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
                 className="w-full rounded-lg border border-line bg-panel-raised px-3 py-2 font-mono text-sm outline-none focus:border-accent"
-                placeholder="https://api.example.com"
+                placeholder="http://localhost:4000"
               />
+              <p className="mt-1.5 text-xs text-text-muted">
+                We will look for OpenAPI/Swagger on this host, then probe live JSON routes. Use the
+                API process (for example localhost:4000), not the website.
+              </p>
             </div>
             <Button type="submit" disabled={creating}>
-              {creating ? "Creating…" : "Create project"}
+              {creating ? "Creating…" : "Create & discover"}
             </Button>
           </form>
         )}
@@ -115,7 +116,8 @@ export default function ProjectsPage() {
           <p className="text-sm text-text-muted">Loading…</p>
         ) : projects.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line p-10 text-center text-sm text-text-muted">
-            No projects yet. Create one to upload an API spec and start testing.
+            No projects yet. Create one with your API URL (including localhost) to discover
+            endpoints automatically.
           </div>
         ) : (
           <div className="grid gap-3">

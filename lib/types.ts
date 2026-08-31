@@ -74,6 +74,7 @@ export interface TestRun {
   workingCount?: number;
   brokenCount?: number;
   skippedCount?: number;
+  manualCount?: number;
   results?: TestResult[];
 }
 

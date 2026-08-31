@@ -86,6 +86,18 @@ export const api = {
     );
   },
 
+  discoverSpec: (token: string, projectId: string) =>
+    request<{
+      source: string;
+      count: number;
+      specUrl?: string;
+      error?: string;
+    }>(`/projects/${projectId}/discover`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({}),
+    }),
+
   triggerRun: (token: string, projectId: string, dryRun: boolean) =>
     request<{ testRun: TestRun }>(`/projects/${projectId}/run`, {
       method: "POST",

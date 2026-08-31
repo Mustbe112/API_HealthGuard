@@ -1,24 +1,35 @@
+import type { ProbeOutcome } from "@/lib/outcome";
+
 interface Props {
-  passed: boolean;
-  skipped?: boolean;
+  outcome: ProbeOutcome;
 }
 
-export function StatusBadge({ passed, skipped }: Props) {
-  if (skipped) {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-pending">
-        <span className="h-1.5 w-1.5 rounded-full bg-pending" />
-        Skipped
-      </span>
-    );
-  }
+const LABEL: Record<ProbeOutcome, string> = {
+  working: "Working",
+  broken: "Broken",
+  manual: "Try manually",
+  skipped: "Skipped",
+};
 
+const TONE: Record<ProbeOutcome, string> = {
+  working: "text-pass",
+  broken: "text-fail",
+  manual: "text-pending",
+  skipped: "text-pending",
+};
+
+const DOT: Record<ProbeOutcome, string> = {
+  working: "bg-pass",
+  broken: "bg-fail",
+  manual: "bg-pending",
+  skipped: "bg-pending",
+};
+
+export function StatusBadge({ outcome }: Props) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-xs ${passed ? "text-pass" : "text-fail"}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${passed ? "bg-pass" : "bg-fail"}`} />
-      {passed ? "Working" : "Broken"}
+    <span className={`inline-flex items-center gap-1.5 text-xs ${TONE[outcome]}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT[outcome]}`} />
+      {LABEL[outcome]}
     </span>
   );
 }

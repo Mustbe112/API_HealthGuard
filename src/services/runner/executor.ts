@@ -6,6 +6,7 @@ import {
   isWorking,
   workingMessage,
 } from "./zeroInput";
+import { classifyOutcome, manualMessage } from "./outcome";
 
 export interface RequestSnapshot {
   url: string;
@@ -119,6 +120,13 @@ export async function executeRequest(
   const documented =
     documentedStatuses.length > 0 ? documentedStatuses : asStatusList(null, 200);
   const passed = isWorking(res.status, documented, probeKind);
+  const outcome = classifyOutcome({ passed, statusCode: res.status });
+  const errorMessage =
+    outcome === "working"
+      ? workingMessage(res.status, documented)
+      : outcome === "manual"
+        ? manualMessage(res.status)
+        : brokenMessage(res.status, documented, probeKind, pathForExplain || built.url);
 
   return {
     statusCode: res.status,
@@ -126,9 +134,7 @@ export async function executeRequest(
     responseBody,
     responseHeaders: headerMap(res),
     passed,
-    errorMessage: passed
-      ? workingMessage(res.status, documented)
-      : brokenMessage(res.status, documented, probeKind, pathForExplain || built.url),
+    errorMessage,
     request,
   };
 }

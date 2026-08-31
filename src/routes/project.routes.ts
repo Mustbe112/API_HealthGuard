@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.middleware";
 import { createProject, listProjects, getProject, updateProject, updateEndpoint } from "../controllers/project.controller";
 import { uploadMiddleware, uploadSpec } from "../controllers/upload.controller";
+import { discoverSpec } from "../controllers/discover.controller";
 import { triggerRun, getRun, listRuns } from "../controllers/testRun.controller";
 import { tryEndpoint } from "../controllers/try.controller";
 import {
@@ -19,6 +20,7 @@ router.get("/", listProjects);
 router.get("/:projectId", getProject);
 router.patch("/:projectId", updateProject);
 router.post("/:projectId/upload", uploadMiddleware, uploadSpec);
+router.post("/:projectId/discover", discoverSpec);
 router.patch("/:projectId/endpoints/:endpointId", updateEndpoint);
 router.post("/:projectId/endpoints/:endpointId/try", tryEndpoint);
 

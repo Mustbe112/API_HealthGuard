@@ -2,6 +2,7 @@ import { Request, Response, RequestHandler } from "express";
 import { z } from "zod";
 import { prisma } from "../db/client";
 import { startProjectTests } from "../services/runner/runner.service";
+import { summarizeOutcomes } from "../services/runner/outcome";
 
 function asyncHandler(fn: RequestHandler): RequestHandler {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -18,16 +19,8 @@ async function assertProjectOwnership(projectId: string, userId: string) {
 
 function summarizeResults(
   results: { passed: boolean; statusCode: number | null }[]
-): { workingCount: number; brokenCount: number; skippedCount: number } {
-  let workingCount = 0;
-  let brokenCount = 0;
-  let skippedCount = 0;
-  for (const r of results) {
-    if (!r.passed) brokenCount += 1;
-    else if (r.statusCode === null) skippedCount += 1;
-    else workingCount += 1;
-  }
-  return { workingCount, brokenCount, skippedCount };
+) {
+  return summarizeOutcomes(results);
 }
 
 async function triggerRunHandler(req: Request, res: Response) {
