@@ -6,7 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { Project } from "@/lib/types";
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/Button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function ProjectsPage() {
   const { token, user, logout, isReady } = useAuth();
@@ -53,10 +55,9 @@ export default function ProjectsPage() {
     <div className="workbench min-h-screen bg-bg">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-lg font-semibold tracking-tight text-text">
-            API HealthGuard
-          </Link>
+          <BrandMark />
           <div className="flex items-center gap-4 text-sm text-text-muted">
+            <ThemeToggle />
             <span>{user?.email}</span>
             <button onClick={logout} className="hover:text-text">
               Sign out

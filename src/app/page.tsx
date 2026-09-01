@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { MethodBadge } from "@/components/MethodBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Home() {
   const { token } = useAuth();
@@ -34,10 +35,11 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             {token ? (
               <Link
                 href="/projects"
-                className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-ink hover:bg-accent-hover"
+                className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-[#0b1220] hover:bg-accent-hover"
               >
                 Open projects
               </Link>
@@ -51,7 +53,7 @@ export default function Home() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-ink hover:bg-accent-hover"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-[#0b1220] hover:bg-accent-hover"
                 >
                   Start for free
                   <Arrow />
@@ -70,7 +72,7 @@ export default function Home() {
             href={token ? "/projects" : "/signup"}
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-xs text-text-muted hover:border-accent/40 hover:text-text"
           >
-            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink">
+            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#0b1220]">
               New
             </span>
             Zero-input testing — no IDs, tokens, or bodies
@@ -88,7 +90,7 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={token ? "/projects" : "/signup"}
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-ink hover:bg-accent-hover"
+              className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-[#0b1220] hover:bg-accent-hover"
             >
               {token ? "Open projects" : "Start for free"}
               <Arrow />
@@ -134,7 +136,7 @@ export default function Home() {
             </p>
             <Link
               href={token ? "/projects" : "/signup"}
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-ink hover:bg-accent-hover"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-[#0b1220] hover:bg-accent-hover"
             >
               {token ? "Go to your projects" : "Create an account"}
               <Arrow />

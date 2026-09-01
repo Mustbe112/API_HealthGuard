@@ -31,7 +31,31 @@
   --delete: #d1242f;
 }
 
-/* UI_LOCK.md — light workbench only. Landing is the dark surface. */
+/* Landing uses :root. Light theme remaps :root; workbench has its own tokens. */
+html[data-app-theme="light"] {
+  --ink: #f4f6fb;
+  --panel: #ffffff;
+  --panel-raised: #eef2f8;
+  --line: #d5deeb;
+  --text: #0b1220;
+  --text-muted: #5c6b86;
+  --accent: #5b8def;
+  --accent-hover: #3f74e0;
+  --pass: #1a8754;
+  --fail: #d1242f;
+  --pending: #c47b00;
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --rail: #0b1220;
+  --run: #5b8def;
+  --link: #5b8def;
+  --healthy: #1a8754;
+  --healthy-soft: #e8f5ee;
+  --warning: #c47b00;
+  --warning-soft: #fff4dc;
+  --unhealthy: #d1242f;
+  --unhealthy-soft: #fdecec;
+}
 .workbench {
   --ink: #1f2328;
   --panel: #ffffff;
@@ -39,16 +63,16 @@
   --line: #e5e7eb;
   --text: #1f2328;
   --text-muted: #6b7280;
-  --accent: #ff6c37;
-  --accent-hover: #e85d2a;
+  --accent: #5b8def;
+  --accent-hover: #3f74e0;
   --pass: #1a8754;
   --fail: #d1242f;
   --pending: #c47b00;
   --bg: #f6f7f9;
   --surface: #ffffff;
   --rail: #212121;
-  --run: #ff6c37;
-  --link: #0265d2;
+  --run: #5b8def;
+  --link: #5b8def;
   --healthy: #1a8754;
   --healthy-soft: #e8f5ee;
   --warning: #c47b00;
@@ -56,12 +80,39 @@
   --unhealthy: #d1242f;
   --unhealthy-soft: #fdecec;
   --get: #1a8754;
-  --post: #ff6c37;
+  --post: #5b8def;
   --put: #0265d2;
   --patch: #7c3aed;
   --delete: #d1242f;
   background: var(--bg);
   color: var(--text);
+}
+
+html[data-app-theme="dark"] .workbench {
+  --ink: #e6ebf5;
+  --panel: #121b2e;
+  --panel-raised: #172038;
+  --line: #23324a;
+  --text: #e6ebf5;
+  --text-muted: #8b99b3;
+  --accent: #5b8def;
+  --accent-hover: #77a1f5;
+  --pass: #34d399;
+  --fail: #f87171;
+  --pending: #fbbf24;
+  --bg: #0b1220;
+  --surface: #121b2e;
+  --rail: #080d16;
+  --run: #5b8def;
+  --link: #77a1f5;
+  --healthy: #34d399;
+  --healthy-soft: #163528;
+  --warning: #fbbf24;
+  --warning-soft: #3a2e12;
+  --unhealthy: #f87171;
+  --unhealthy-soft: #3a1518;
+  --get: #34d399;
+  --post: #5b8def;
 }
 
 @theme inline {

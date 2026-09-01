@@ -8,6 +8,7 @@ import { ConnectModal } from "./ConnectModal";
 import { EndpointTree } from "./EndpointTree";
 import { IconRail } from "./IconRail";
 import { IncidentRail } from "./IncidentRail";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { RunButton } from "./RunButton";
 import type { ReactNode } from "react";
 
@@ -61,6 +62,7 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
             >
               {ctx.running ? "Running…" : pathname.includes("/endpoints/") ? "Run again" : "Run health check"}
             </RunButton>
+            <ThemeToggle />
             <span className="text-xs text-text-muted">{user?.email}</span>
             <button
               type="button"
