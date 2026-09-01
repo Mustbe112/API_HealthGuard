@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n backend,frontend -c yellow,cyan \"npm:dev:backend\" \"npm:dev:frontend\"",
-    "dev:backend": "tsx watch src/index.ts",
+    "dev:backend": "tsx watch backend/src/index.ts",
     "dev:frontend": "next dev",
     "build:frontend": "next build",
-    "start:backend": "node dist/index.js",
+    "start:backend": "node backend/dist/index.js",
     "start:frontend": "next start",
     "build:backend": "tsc -p tsconfig.backend.json",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.backend.json --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },

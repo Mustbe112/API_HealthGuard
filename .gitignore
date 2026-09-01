@@ -1,8 +1,14 @@
 node_modules/
 dist/
+backend/dist/
 .next/
 .env
 .env.local
+.env*.local
 *.log
 *.tsbuildinfo
 next-env.d.ts
+.cursor/
+CLAUDE.md
+UI_LOCK.md
+frontend/

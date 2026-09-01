@@ -4,7 +4,7 @@
 // - User.passwordHash stores an Argon2 hash. Never store raw passwords.
 // - EnvironmentVariable.value stores an AES-256-GCM ciphertext (base64) when
 //   isSecret = true. It is ENCRYPTED, not hashed, because the test runner
-//   needs the real value to send in requests. See src/utils/crypto.ts.
+//   needs the real value to send in requests. See backend/src/utils/crypto.ts.
 // - Non-secret variables (e.g. base_url) are stored as plain text since
 //   there is nothing to protect there.
 

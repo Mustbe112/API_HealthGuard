@@ -38,7 +38,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "frontend",
-    "backend"
+    "backend",
+    "frontend"
   ]
 }

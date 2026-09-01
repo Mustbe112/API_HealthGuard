@@ -5,10 +5,10 @@
     "moduleResolution": "node",
     "jsx": "react-jsx",
     "noEmit": false,
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "backend/dist",
+    "rootDir": "backend/src",
     "plugins": []
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/app/**/*"]
+  "include": ["backend/src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "backend/dist"]
 }
