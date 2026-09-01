@@ -20,8 +20,6 @@ import {
 } from "./workbench-health";
 import type { EnvVariable, Endpoint, Project, TestResult, TestRun } from "./types";
 
-export type ConnectTab = "file" | "url";
-
 export type IncidentRow = {
   id: string;
   endpointId: string;
@@ -47,14 +45,12 @@ type ProjectContextValue = {
   selectedRun: TestRun | null;
   variables: EnvVariable[];
   connectOpen: boolean;
-  connectTab: ConnectTab;
-  openConnect: (tab?: ConnectTab) => void;
+  openConnect: () => void;
   closeConnect: () => void;
   startRun: () => Promise<void>;
   selectRun: (runId: string) => Promise<void>;
   discoverFromBaseUrl: () => Promise<void>;
   uploadSpec: (file: File) => Promise<void>;
-  updateBaseUrl: (baseUrl: string) => Promise<void>;
   addVariable: (key: string, value: string, isSecret: boolean) => Promise<void>;
   deleteVariable: (key: string) => Promise<void>;
   summary: {
@@ -91,7 +87,6 @@ export function ProjectProvider({
   const [selectedRun, setSelectedRun] = useState<TestRun | null>(null);
   const [variables, setVariables] = useState<EnvVariable[]>([]);
   const [connectOpen, setConnectOpen] = useState(false);
-  const [connectTab, setConnectTab] = useState<ConnectTab>("file");
   const autoDiscovered = useRef(false);
 
   const loadProject = useCallback(async () => {
@@ -229,16 +224,6 @@ export function ProjectProvider({
     [token, projectId]
   );
 
-  const updateBaseUrl = useCallback(
-    async (baseUrl: string) => {
-      if (!token) return;
-      const { project: next } = await api.updateProject(token, projectId, { baseUrl });
-      setProject(next);
-      await discoverFromBaseUrl();
-    },
-    [token, projectId, discoverFromBaseUrl]
-  );
-
   const addVariable = useCallback(
     async (key: string, value: string, isSecret: boolean) => {
       if (!token) return;
@@ -301,17 +286,12 @@ export function ProjectProvider({
     selectedRun,
     variables,
     connectOpen,
-    connectTab,
-    openConnect: (tab = "file") => {
-      setConnectTab(tab);
-      setConnectOpen(true);
-    },
+    openConnect: () => setConnectOpen(true),
     closeConnect: () => setConnectOpen(false),
     startRun,
     selectRun,
     discoverFromBaseUrl,
     uploadSpec,
-    updateBaseUrl,
     addVariable,
     deleteVariable,
     summary: {

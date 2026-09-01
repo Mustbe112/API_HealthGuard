@@ -54,6 +54,12 @@ async function updateProjectHandler(req: Request, res: Response) {
 
   const parsed = updateProjectSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  if (parsed.data.baseUrl !== undefined) {
+    return res.status(409).json({
+      error:
+        "API Base URL is locked after the project is created. Create a new project to monitor a different API.",
+    });
+  }
   if (Object.keys(parsed.data).length === 0) {
     return res.status(400).json({ error: "No fields to update" });
   }

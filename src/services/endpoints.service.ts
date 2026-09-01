@@ -3,8 +3,7 @@ import { NormalizedEndpoint } from "./parsers/types";
 
 export async function replaceProjectEndpoints(
   projectId: string,
-  endpoints: NormalizedEndpoint[],
-  options?: { serverUrl?: string }
+  endpoints: NormalizedEndpoint[]
 ) {
   return prisma.$transaction(async (tx) => {
     await tx.endpoint.deleteMany({ where: { projectId } });
@@ -22,9 +21,6 @@ export async function replaceProjectEndpoints(
         headers: e.headers as any,
       })),
     });
-    if (options?.serverUrl) {
-      await tx.project.update({ where: { id: projectId }, data: { baseUrl: options.serverUrl } });
-    }
     return tx.endpoint.findMany({
       where: { projectId },
       orderBy: [{ path: "asc" }, { method: "asc" }],

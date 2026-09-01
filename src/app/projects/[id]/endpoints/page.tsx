@@ -15,13 +15,15 @@ export default function EndpointsPage() {
   if (endpoints.length === 0) {
     return (
       <div className="rounded-md border border-line bg-surface p-8 text-center">
-        <p className="text-sm text-text-muted">No endpoints yet. Import a spec or enter an API Base URL.</p>
+        <p className="text-sm text-text-muted">
+          No endpoints yet. Import an OpenAPI or Swagger spec to add POST, PUT, and DELETE routes.
+        </p>
         <button
           type="button"
-          onClick={() => openConnect("file")}
+          onClick={() => openConnect()}
           className="mt-4 rounded bg-run px-3 py-1.5 text-sm font-medium text-white"
         >
-          Connect API
+          Import spec
         </button>
       </div>
     );

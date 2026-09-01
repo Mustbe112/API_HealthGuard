@@ -72,7 +72,7 @@ export const api = {
   getProject: (token: string, projectId: string) =>
     request<{ project: Project }>(`/projects/${projectId}`, { token }),
 
-  updateProject: (token: string, projectId: string, data: { name?: string; baseUrl?: string }) =>
+  updateProject: (token: string, projectId: string, data: { name?: string }) =>
     request<{ project: Project }>(`/projects/${projectId}`, {
       method: "PATCH",
       token,

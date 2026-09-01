@@ -13,11 +13,12 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4000),
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:3000",
-  /** All allowed browser origins (Vite 5173 + Next 3000). */
+  /** All allowed browser origins (Next 3000 + Vite 5173). FRONTEND_URL must not drop either. */
   frontendOrigins: [
     ...new Set(
       [
         ...(process.env.FRONTEND_URL ?? "http://localhost:3000").split(","),
+        "http://localhost:3000",
         "http://localhost:5173",
       ]
         .map((s) => s.trim())

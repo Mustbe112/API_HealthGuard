@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useProject } from "@/lib/project-context";
 import { Button } from "@/components/Button";
 
 export default function SettingsPage() {
-  const { project, variables, addVariable, deleteVariable, updateBaseUrl, error } = useProject();
+  const { project, variables, addVariable, deleteVariable, error } = useProject();
   const [key, setKey] = useState("");
   const [value, setValue] = useState("");
   const [secret, setSecret] = useState(true);
-  const [baseUrl, setBaseUrl] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (project?.baseUrl) setBaseUrl(project.baseUrl);
-  }, [project?.baseUrl]);
 
   async function onAdd(e: FormEvent) {
     e.preventDefault();
@@ -29,33 +24,19 @@ export default function SettingsPage() {
     }
   }
 
-  async function onSaveUrl(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      await updateBaseUrl(baseUrl);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="max-w-lg space-y-6">
       <h1 className="text-xl font-semibold text-text">Settings</h1>
       {error && <p className="text-sm text-unhealthy">{error}</p>}
 
-      <form onSubmit={(e) => void onSaveUrl(e)} className="rounded-md border border-line bg-surface p-4">
-        <legend className="text-sm font-medium">API Base URL</legend>
-        <input
-          type="url"
-          value={baseUrl}
-          onChange={(e) => setBaseUrl(e.target.value)}
-          className="mt-2 w-full rounded border border-line bg-bg px-3 py-2 font-mono text-sm outline-none focus:border-run"
-        />
-        <button type="submit" disabled={busy} className="mt-3 rounded bg-run px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
-          Save and rediscover
-        </button>
-      </form>
+      <section className="rounded-md border border-line bg-surface p-4">
+        <h2 className="text-sm font-medium">API Base URL</h2>
+        <p className="mt-2 break-all font-mono text-sm text-text">{project?.baseUrl ?? "—"}</p>
+        <p className="mt-2 text-xs text-text-muted">
+          Locked when this project was created. To monitor a different API, create a new project.
+          Import an OpenAPI or Swagger spec if discovery only found GET routes.
+        </p>
+      </section>
 
       <section className="rounded-md border border-line bg-surface p-4">
         <h2 className="text-sm font-medium">Project variables</h2>

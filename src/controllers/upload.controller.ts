@@ -37,12 +37,13 @@ async function uploadSpecHandler(req: Request, res: Response) {
     return res.status(422).json({ error: "Could not parse the uploaded file. Is it valid JSON/YAML?" });
   }
 
-  const { endpoints, format, serverUrl } = parsedResult;
+  const { endpoints, format } = parsedResult;
   if (endpoints.length === 0) {
     return res.status(422).json({ error: "No endpoints found in the uploaded file" });
   }
 
-  const created = await replaceProjectEndpoints(projectId, endpoints, { serverUrl });
+  // Spec servers[] must not retarget the project. Origin is set at create.
+  const created = await replaceProjectEndpoints(projectId, endpoints);
 
   const projectAfter = await prisma.project.findUnique({ where: { id: projectId } });
   return res.status(200).json({

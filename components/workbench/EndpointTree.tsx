@@ -11,13 +11,11 @@ export function EndpointTree({
   apiName,
   endpoints,
   onImport,
-  onNew,
 }: {
   projectId: string;
   apiName: string;
   endpoints: Endpoint[];
   onImport: () => void;
-  onNew: () => void;
 }) {
   const [q, setQ] = useState("");
   const pathname = usePathname();
@@ -33,13 +31,6 @@ export function EndpointTree({
         >
           Import
         </button>
-        <button
-          type="button"
-          onClick={onNew}
-          className="flex-1 rounded border border-line px-2 py-1 text-xs text-text hover:bg-bg"
-        >
-          New
-        </button>
       </div>
       <div className="border-b border-line p-3">
         <input
@@ -53,7 +44,7 @@ export function EndpointTree({
         <p className="mb-1 truncate px-2 text-xs font-medium text-text">{apiName}</p>
         {visible.length === 0 ? (
           <p className="px-2 py-4 text-xs text-text-muted">
-            No endpoints yet. Import a spec or enter an API Base URL.
+            No endpoints yet. Import an OpenAPI or Swagger spec to add POST, PUT, and DELETE routes.
           </p>
         ) : (
           visible.map((ep) => {

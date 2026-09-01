@@ -31,13 +31,16 @@ export default function DashboardPage() {
   if (!(project.endpoints?.length) && !selectedRun) {
     return (
       <div className="rounded-md border border-line bg-surface p-8 text-center">
-        <p className="text-sm text-text-muted">No endpoints yet. Import a spec or enter an API Base URL.</p>
+        <p className="text-sm text-text-muted">
+          No endpoints yet. Discovery from the API Base URL may only find GET routes. Import an
+          OpenAPI or Swagger spec to add the rest.
+        </p>
         <button
           type="button"
-          onClick={() => openConnect("url")}
+          onClick={() => openConnect()}
           className="mt-4 rounded bg-run px-3 py-1.5 text-sm font-medium text-white"
         >
-          Connect API
+          Import spec
         </button>
         {uploadMsg && <p className="mt-3 text-xs text-text-muted">{uploadMsg}</p>}
       </div>

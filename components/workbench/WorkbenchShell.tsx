@@ -19,12 +19,8 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
   const ctx = useProject();
   const showIncidents = pathname === `/projects/${ctx.projectId}` || pathname.includes("/incidents");
 
-  async function onConnect(input: { kind: "file"; file: File } | { kind: "baseUrl"; baseUrl: string }) {
-    if (input.kind === "file") {
-      await ctx.uploadSpec(input.file);
-    } else {
-      await ctx.updateBaseUrl(input.baseUrl);
-    }
+  async function onImportSpec(file: File) {
+    await ctx.uploadSpec(file);
     ctx.closeConnect();
   }
 
@@ -35,8 +31,7 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
         projectId={ctx.projectId}
         apiName={ctx.project?.name ?? "No API"}
         endpoints={ctx.project?.endpoints ?? []}
-        onImport={() => ctx.openConnect("file")}
-        onNew={() => ctx.openConnect("url")}
+        onImport={() => ctx.openConnect()}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-line bg-surface px-4">
@@ -83,11 +78,9 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
       </div>
       {ctx.connectOpen ? (
         <ConnectModal
-          key={ctx.connectTab}
-          initialTab={ctx.connectTab}
-          busy={ctx.uploading || ctx.discovering}
+          busy={ctx.uploading}
           onCancel={ctx.closeConnect}
-          onContinue={(input) => void onConnect(input)}
+          onContinue={(file) => void onImportSpec(file)}
         />
       ) : null}
     </div>
