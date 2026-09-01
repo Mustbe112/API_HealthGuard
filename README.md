@@ -1,13 +1,13 @@
 # API Vitals
 
-Upload an API spec (or paste a base URL, including localhost) and run **zero-input** checks on every route. Results are **Working**, **Try manually** (for example 401/403 — the route is up but needs a real login), or **Broken** (5xx / no response). You can also send real requests from **Try endpoints**, like Postman.
+Create a project with an **API Base URL** (including localhost), then run **zero-input** checks on every route. Upload an OpenAPI or Postman spec if discovery only found GET routes. Results are **Working**, **Try manually** (for example 401/403 — the route is up but needs a real login), or **Broken** (5xx / no response). You can also send real requests from **Try endpoints**, like Postman. The workbench maps those to **Healthy** / **Warning** / **Unhealthy**.
 
 One repo, one `package.json`. The Next.js UI (`:3000`) and Express API (`:4000`) still run as two processes; `npm run dev` starts both.
 
 ## What it does
 
-- **Discover from base URL** — looks for OpenAPI/Swagger on the host, then probes live JSON routes. If `GET /items` returns a list, it also infers `POST /items` and `GET|PATCH|PUT|DELETE /items/{id}`.
-- **Upload OpenAPI or Postman** — parses paths, methods, and documented statuses.
+- **Discover from base URL (at create)** — looks for OpenAPI/Swagger on the host, then probes live JSON routes. If `GET /items` returns a list, it also infers `POST /items` and `GET|PATCH|PUT|DELETE /items/{id}`. The Base URL is **locked** after the project is created; a different API needs a new project.
+- **Upload OpenAPI or Postman** — parses paths, methods, and documented statuses. Use **Import** after create when live discovery only found GET routes. The spec does not change the project Base URL.
 - **Zero-input test run** — throwaway register when possible, fake UUIDs for `{id}`, empty bodies for writes. Does not need you to fill IDs or tokens first.
 - **Try endpoints** — path params, headers, JSON body, bearer token, live response.
 - **Project env vars** — optional secrets (encrypted at rest) for tokens and Postman `{{variables}}`.
@@ -56,7 +56,7 @@ One file is used by both servers. Only `NEXT_PUBLIC_*` is exposed to the browser
 | `JWT_SECRET` | Signs login tokens |
 | `ENCRYPTION_KEY` | 32-byte key, base64 — encrypts stored API secrets |
 | `PORT` | Backend port (default `4000`) |
-| `FRONTEND_URL` | Allowed browser origin (default `http://localhost:3000`) |
+| `FRONTEND_URL` | Extra allowed browser origin (the API always allows `http://localhost:3000` and `http://localhost:5173`) |
 | `NEXT_PUBLIC_API_URL` | Frontend → backend (`http://localhost:4000`) |
 
 Generate secrets:
@@ -72,9 +72,9 @@ If `npx prisma migrate dev` asks for a migration name, use `init` only on an emp
 
 ## How to test an API
 
-1. Create a project. Set **base URL** to the API under test, for example `http://localhost:5000` (the **API** process, not this app’s website on `:3000`).
-2. Discovery runs automatically when the project has no endpoints. You can also click **Discover from base URL**, or upload an OpenAPI/Postman file.
-3. Click **Run tests** (or wait after discover/upload).
+1. Create a project. Set **API Base URL** to the API under test, for example `http://localhost:5000` (the **API** process, not this app’s website on `:3000`). You cannot change that URL later.
+2. Discovery runs automatically when the project has no endpoints. If you need POST/PUT/PATCH/DELETE, click **Import** and upload an OpenAPI/Postman file (same project).
+3. Click **Run health check** (or wait after discover/upload).
 4. Read the badges:
    - **Working** — probe got an expected response (2xx, or 400/404/422 on empty/fake data). No need to retest by hand.
    - **Try manually** — **401** / **403**. Route is live; open **Try endpoints** and send a real token.
@@ -115,3 +115,4 @@ prisma/               Schema + migrations
 - Classmates only need **Node**, **npm install**, **`.env`**, **`npx prisma generate`**, and **`npx prisma migrate dev`**.
 - Point the project base URL at **their** API (`http://localhost:5000`, etc.). This tester’s UI is `:3000` and its own API is `:4000`.
 - If the backend cannot reach “localhost”, they may be targeting the Next.js app instead of the API under test.
+- To monitor a different API, create a **new project**. Do not retarget an existing one.
