@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description: "Upload an API spec, test every endpoint, see what's slow and what's broken.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"

@@ -1,13 +1,15 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api } from "./api";
 import type { User } from "./types";
+
+const TOKEN_KEY = "av_token";
 
 interface AuthState {
   user: User | null;
   token: string | null;
-  isReady: boolean; // true once we've checked for an existing session
+  isReady: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -18,26 +20,48 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(TOKEN_KEY);
+    if (!saved) {
+      setIsReady(true);
+      return;
+    }
+    api
+      .me(saved)
+      .then(({ user: next }) => {
+        setToken(saved);
+        setUser(next);
+      })
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+      })
+      .finally(() => setIsReady(true));
+  }, []);
 
   async function login(email: string, password: string) {
-    const { user, token } = await api.login(email, password);
-    setUser(user);
-    setToken(token);
+    const { user: next, token: nextToken } = await api.login(email, password);
+    localStorage.setItem(TOKEN_KEY, nextToken);
+    setUser(next);
+    setToken(nextToken);
   }
 
   async function signup(email: string, password: string) {
-    const { user, token } = await api.signup(email, password);
-    setUser(user);
-    setToken(token);
+    const { user: next, token: nextToken } = await api.signup(email, password);
+    localStorage.setItem(TOKEN_KEY, nextToken);
+    setUser(next);
+    setToken(nextToken);
   }
 
   function logout() {
+    localStorage.removeItem(TOKEN_KEY);
     setUser(null);
     setToken(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isReady: true, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, token, isReady, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

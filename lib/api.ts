@@ -57,6 +57,8 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
 
+  me: (token: string) => request<{ user: User }>("/auth/me", { token }),
+
   listProjects: (token: string) =>
     request<{ projects: Project[] }>("/projects", { token }),
 

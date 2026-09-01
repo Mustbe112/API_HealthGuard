@@ -1,18 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  /* Design tokens — API vitals/monitoring aesthetic, not a generic dashboard */
-  --ink: #0b1220;         /* page background — deep blue-black, not pure black */
-  --panel: #121b2e;       /* card/panel background */
-  --panel-raised: #172038; /* slightly raised surface (inputs, hovers) */
-  --line: #23324a;        /* borders/dividers */
-  --text: #e6ebf5;        /* primary text */
-  --text-muted: #8b99b3;  /* secondary text */
-  --accent: #5b8def;      /* primary action blue */
+  /* Landing stays dark. Authenticated chrome remaps these under .workbench. */
+  --ink: #0b1220;
+  --panel: #121b2e;
+  --panel-raised: #172038;
+  --line: #23324a;
+  --text: #e6ebf5;
+  --text-muted: #8b99b3;
+  --accent: #5b8def;
   --accent-hover: #77a1f5;
-  --pass: #34d399;        /* signal: passed */
-  --fail: #f87171;        /* signal: failed */
-  --pending: #fbbf24;     /* signal: pending/skipped */
+  --pass: #34d399;
+  --fail: #f87171;
+  --pending: #fbbf24;
+  --bg: var(--ink);
+  --surface: var(--panel);
+  --rail: #080d16;
+  --run: var(--accent);
+  --link: #5b8def;
+  --healthy: #1a8754;
+  --healthy-soft: #163528;
+  --warning: #c47b00;
+  --warning-soft: #3a2e12;
+  --unhealthy: #d1242f;
+  --unhealthy-soft: #3a1518;
+  --get: #1a8754;
+  --post: #ff6c37;
+  --put: #0265d2;
+  --patch: #7c3aed;
+  --delete: #d1242f;
+}
+
+/* UI_LOCK.md — light workbench only. Landing is the dark surface. */
+.workbench {
+  --ink: #1f2328;
+  --panel: #ffffff;
+  --panel-raised: #f6f7f9;
+  --line: #e5e7eb;
+  --text: #1f2328;
+  --text-muted: #6b7280;
+  --accent: #ff6c37;
+  --accent-hover: #e85d2a;
+  --pass: #1a8754;
+  --fail: #d1242f;
+  --pending: #c47b00;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --rail: #212121;
+  --run: #ff6c37;
+  --link: #0265d2;
+  --healthy: #1a8754;
+  --healthy-soft: #e8f5ee;
+  --warning: #c47b00;
+  --warning-soft: #fff4dc;
+  --unhealthy: #d1242f;
+  --unhealthy-soft: #fdecec;
+  --get: #1a8754;
+  --post: #ff6c37;
+  --put: #0265d2;
+  --patch: #7c3aed;
+  --delete: #d1242f;
+  background: var(--bg);
+  color: var(--text);
 }
 
 @theme inline {
@@ -27,6 +76,22 @@
   --color-pass: var(--pass);
   --color-fail: var(--fail);
   --color-pending: var(--pending);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-rail: var(--rail);
+  --color-run: var(--run);
+  --color-link: var(--link);
+  --color-healthy: var(--healthy);
+  --color-healthy-soft: var(--healthy-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-unhealthy: var(--unhealthy);
+  --color-unhealthy-soft: var(--unhealthy-soft);
+  --color-get: var(--get);
+  --color-post: var(--post);
+  --color-put: var(--put);
+  --color-patch: var(--patch);
+  --color-delete: var(--delete);
 
   --font-display: var(--font-space-grotesk);
   --font-sans: var(--font-inter);

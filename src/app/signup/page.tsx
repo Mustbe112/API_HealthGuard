@@ -30,18 +30,18 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="workbench flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="font-display text-2xl font-semibold tracking-tight hover:text-accent">
-            API Vitals
+          <Link href="/" className="text-2xl font-semibold tracking-tight text-text hover:text-run">
+            API HealthGuard
           </Link>
           <p className="mt-1 text-sm text-text-muted">Create your account</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-xl border border-line bg-panel p-6"
+          className="space-y-4 rounded-md border border-line bg-surface p-6"
         >
           <div>
             <label className="mb-1 block text-xs font-medium text-text-muted">Email</label>
@@ -50,7 +50,7 @@ export default function SignupPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-line bg-panel-raised px-3 py-2 text-sm text-text outline-none focus:border-accent"
+              className="w-full rounded border border-line bg-bg px-3 py-2 text-sm text-text outline-none focus:border-run"
               placeholder="you@example.com"
             />
           </div>
@@ -62,21 +62,21 @@ export default function SignupPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-line bg-panel-raised px-3 py-2 text-sm text-text outline-none focus:border-accent"
+              className="w-full rounded border border-line bg-bg px-3 py-2 text-sm text-text outline-none focus:border-run"
               placeholder="At least 8 characters"
             />
           </div>
 
           {error && <p className="text-xs text-fail">{error}</p>}
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Creating account…" : "Create account"}
+          <Button type="submit" disabled={loading} className="w-full !bg-run !text-white">
+            {loading ? "Creating account…" : "Continue"}
           </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-text-muted">
           Already have an account?{" "}
-          <Link href="/login" className="text-accent hover:text-accent-hover">
+            <Link href="/login" className="text-link hover:underline">
             Sign in
           </Link>
         </p>

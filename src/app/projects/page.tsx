@@ -9,7 +9,7 @@ import type { Project } from "@/lib/types";
 import { Button } from "@/components/Button";
 
 export default function ProjectsPage() {
-  const { token, user, logout } = useAuth();
+  const { token, user, logout, isReady } = useAuth();
   const router = useRouter();
 
   const [projects, setProjects] = useState<Project[] | null>(null);
@@ -21,6 +21,7 @@ export default function ProjectsPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
+    if (!isReady) return;
     if (!token) {
       router.replace("/login");
       return;
@@ -29,7 +30,7 @@ export default function ProjectsPage() {
       .listProjects(token)
       .then((res) => setProjects(res.projects))
       .catch((err) => setError(err instanceof ApiError ? err.message : "Failed to load projects"));
-  }, [token, router]);
+  }, [token, router, isReady]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -46,14 +47,14 @@ export default function ProjectsPage() {
     }
   }
 
-  if (!token) return null;
+  if (!isReady || !token) return null;
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-line">
+    <div className="workbench min-h-screen bg-bg">
+      <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="font-display text-lg font-semibold tracking-tight">
-            API Vitals
+          <Link href="/" className="text-lg font-semibold tracking-tight text-text">
+            API HealthGuard
           </Link>
           <div className="flex items-center gap-4 text-sm text-text-muted">
             <span>{user?.email}</span>
@@ -66,8 +67,8 @@ export default function ProjectsPage() {
 
       <main className="mx-auto max-w-5xl px-6 py-10">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="font-display text-xl font-semibold">Projects</h1>
-          <Button onClick={() => setShowCreate((v) => !v)}>
+          <h1 className="text-xl font-semibold">Projects</h1>
+          <Button onClick={() => setShowCreate((v) => !v)} className="!bg-run !text-white">
             {showCreate ? "Cancel" : "New project"}
           </Button>
         </div>
@@ -75,7 +76,7 @@ export default function ProjectsPage() {
         {showCreate && (
           <form
             onSubmit={handleCreate}
-            className="mb-8 space-y-4 rounded-xl border border-line bg-panel p-6"
+            className="mb-8 space-y-4 rounded-md border border-line bg-surface p-6"
           >
             <div>
               <label className="mb-1 block text-xs font-medium text-text-muted">
@@ -85,7 +86,7 @@ export default function ProjectsPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-line bg-panel-raised px-3 py-2 text-sm outline-none focus:border-accent"
+                className="w-full rounded border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-run"
                 placeholder="My API"
               />
             </div>
@@ -96,7 +97,7 @@ export default function ProjectsPage() {
                 type="url"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
-                className="w-full rounded-lg border border-line bg-panel-raised px-3 py-2 font-mono text-sm outline-none focus:border-accent"
+                className="w-full rounded border border-line bg-bg px-3 py-2 font-mono text-sm outline-none focus:border-run"
                 placeholder="http://localhost:4000"
               />
               <p className="mt-1.5 text-xs text-text-muted">
@@ -104,7 +105,7 @@ export default function ProjectsPage() {
                 API process (for example localhost:4000), not the website.
               </p>
             </div>
-            <Button type="submit" disabled={creating}>
+            <Button type="submit" disabled={creating} className="!bg-run !text-white">
               {creating ? "Creating…" : "Create & discover"}
             </Button>
           </form>
@@ -125,7 +126,7 @@ export default function ProjectsPage() {
               <Link
                 key={p.id}
                 href={`/projects/${p.id}`}
-                className="flex items-center justify-between rounded-xl border border-line bg-panel px-5 py-4 transition-colors hover:border-accent/50"
+                className="flex items-center justify-between rounded-md border border-line bg-surface px-5 py-4 transition-colors hover:border-run/50"
               >
                 <div>
                   <div className="font-medium">{p.name}</div>
