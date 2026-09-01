@@ -1,9 +1,6 @@
-import path from "node:path";
 import dotenv from "dotenv";
 
-// Express secrets live in backend/.env. Root .env is for Next (NEXT_PUBLIC_*).
-// backend/.env wins; root fills any missing keys so Prisma at the repo root still works.
-dotenv.config({ path: path.resolve(process.cwd(), "backend/.env") });
+// One repo-root .env for Next, Express, and Prisma. Do not add backend/.env.
 dotenv.config();
 
 function required(name: string): string {

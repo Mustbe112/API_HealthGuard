@@ -47,19 +47,17 @@ Open **http://localhost:3000**, sign up, create a project.
 
 ### `.env`
 
-Copy `.env.example` to `.env` (Next + Prisma CLI) and `backend/.env.example` to `backend/.env` (Express). Only `NEXT_PUBLIC_*` is exposed to the browser. **Do not commit real `.env` files.**
+Copy `.env.example` to `.env` at the repo root. Next, Express, and Prisma all read that file. Only `NEXT_PUBLIC_*` is exposed to the browser. **Do not commit `.env`.**
 
-Express loads `backend/.env` first, then root `.env` for any missing keys.
-
-| Variable | Where | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | root `.env` | Frontend → backend (`http://localhost:4000`) |
-| `DATABASE_URL` | both | Postgres URI (Supabase **transaction** pooler, port **6543**, with `?pgbouncer=true`). Root copy is for Prisma CLI. |
-| `DIRECT_URL` | both | Postgres URI for migrations (Supabase **session** pooler, port **5432**) |
-| `JWT_SECRET` | `backend/.env` | Signs login tokens |
-| `ENCRYPTION_KEY` | `backend/.env` | 32-byte key, base64 — encrypts stored API secrets |
-| `PORT` | `backend/.env` | Backend port (default `4000`) |
-| `FRONTEND_URL` | `backend/.env` | Extra allowed browser origin (the API always allows `http://localhost:3000` and `http://localhost:5173`) |
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | Frontend → backend (`http://localhost:4000`) |
+| `DATABASE_URL` | Postgres URI (Supabase **transaction** pooler, port **6543**, with `?pgbouncer=true`) |
+| `DIRECT_URL` | Postgres URI for migrations (Supabase **session** pooler, port **5432**) |
+| `JWT_SECRET` | Signs login tokens |
+| `ENCRYPTION_KEY` | 32-byte key, base64 — encrypts stored API secrets |
+| `PORT` | Backend port (default `4000`) |
+| `FRONTEND_URL` | Extra allowed browser origin (the API always allows `http://localhost:3000` and `http://localhost:5173`) |
 
 Generate secrets:
 
