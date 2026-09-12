@@ -8,6 +8,7 @@ import { resultForEndpoint, useProject } from "@/lib/project-context";
 import { formatLatency, healthFromOutcome } from "@/lib/workbench-health";
 import { EndpointTester } from "@/components/EndpointTester";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
+import { ExplainPanel } from "@/components/workbench/ExplainPanel";
 import { MethodBadge } from "@/components/MethodBadge";
 
 export default function EndpointDetailPage({
@@ -20,7 +21,8 @@ export default function EndpointDetailPage({
   const { token } = useAuth();
   const { project, selectedRun, projectId } = useProject();
   const router = useRouter();
-  const initialTab = search.get("tab") === "try" ? "try" : "results";
+  const tabParam = search.get("tab");
+  const initialTab = tabParam === "try" || tabParam === "log" ? tabParam : "results";
   const [tab, setTab] = useState<"results" | "log" | "try">(initialTab);
 
   const endpoint = project?.endpoints?.find((e) => e.id === endpointId);
@@ -102,6 +104,16 @@ export default function EndpointDetailPage({
               {result?.probe?.proves && <li className="text-text-muted">{result.probe.proves}</li>}
               {result?.probe?.caution && <li className="text-warning">{result.probe.caution}</li>}
               {result?.errorMessage && <li className="text-unhealthy">{result.errorMessage}</li>}
+              {result && (
+                <li className="pt-2">
+                  <ExplainPanel
+                    projectId={projectId}
+                    runId={selectedRun?.id}
+                    endpointId={endpointId}
+                    label="Explain this result"
+                  />
+                </li>
+              )}
             </ul>
           )}
         </div>

@@ -11,14 +11,14 @@ import {
 } from "react";
 import { api, ApiError } from "./api";
 import { useAuth } from "./auth-context";
-import { classifyOutcome, summarizeOutcomes } from "./outcome";
+import { classifyOutcome, rollupResultsByEndpoint, summarizeOutcomes } from "./outcome";
 import {
   classifyHealth,
   healthFromOutcome,
   scoreFromCounts,
   type HealthStatus,
 } from "./workbench-health";
-import type { EnvVariable, Endpoint, Project, TestResult, TestRun } from "./types";
+import type { EnvVariable, Endpoint, Project, RequestSnapshot, TestResult, TestRun } from "./types";
 
 export type IncidentRow = {
   id: string;
@@ -60,8 +60,20 @@ type ProjectContextValue = {
     healthyCount: number;
     warningCount: number;
     unhealthyCount: number;
+    workingCount: number;
+    manualCount: number;
+    brokenCount: number;
     avgLatencyMs: number;
     lastRunAt: string;
+    hasRun: boolean;
+    firstBroken: {
+      endpointId: string;
+      method: Endpoint["method"];
+      path: string;
+      statusCode: number | null;
+      errorMessage: string | null;
+      request: RequestSnapshot | null;
+    } | null;
   };
   incidents: IncidentRow[];
 };
@@ -242,14 +254,9 @@ export function ProjectProvider({
     [token, projectId]
   );
 
-  const results = selectedRun?.results ?? [];
+  const results = rollupResultsByEndpoint(selectedRun?.results ?? []);
   const counts = selectedRun
-    ? {
-        workingCount: selectedRun.workingCount ?? summarizeOutcomes(results).workingCount,
-        brokenCount: selectedRun.brokenCount ?? summarizeOutcomes(results).brokenCount,
-        skippedCount: selectedRun.skippedCount ?? summarizeOutcomes(results).skippedCount,
-        manualCount: selectedRun.manualCount ?? summarizeOutcomes(results).manualCount,
-      }
+    ? summarizeOutcomes(results)
     : { workingCount: 0, brokenCount: 0, skippedCount: 0, manualCount: 0 };
 
   const latencies = results.map((r) => r.responseTimeMs).filter((n): n is number => n != null);
@@ -259,18 +266,18 @@ export function ProjectProvider({
   const warningCount = results.filter((r) => healthFromOutcome(classifyOutcome(r)) === "warning").length;
   const unhealthyCount = results.filter((r) => healthFromOutcome(classifyOutcome(r)) === "unhealthy").length;
 
-  const incidents: IncidentRow[] = results
-    .filter((r) => classifyOutcome(r) === "broken")
-    .map((r) => ({
-      id: r.id,
-      endpointId: r.endpointId,
-      method: r.endpoint.method,
-      path: r.endpoint.path,
-      reason: r.errorMessage || `${r.endpoint.method} ${r.endpoint.path} · ${r.statusCode ?? "timeout"}`,
-      statusCode: r.statusCode,
-      latencyMs: r.responseTimeMs,
-      detectedAt: r.createdAt,
-    }));
+  const brokenResults = results.filter((r) => classifyOutcome(r) === "broken");
+  const firstBrokenResult = brokenResults[0] ?? null;
+  const incidents: IncidentRow[] = brokenResults.map((r) => ({
+    id: r.id,
+    endpointId: r.endpointId,
+    method: r.endpoint.method,
+    path: r.endpoint.path,
+    reason: r.errorMessage || `${r.endpoint.method} ${r.endpoint.path} · ${r.statusCode ?? "timeout"}`,
+    statusCode: r.statusCode,
+    latencyMs: r.responseTimeMs,
+    detectedAt: r.createdAt,
+  }));
 
   const value: ProjectContextValue = {
     projectId,
@@ -301,10 +308,24 @@ export function ProjectProvider({
       healthyCount,
       warningCount,
       unhealthyCount,
+      workingCount: counts.workingCount,
+      manualCount: counts.manualCount,
+      brokenCount: counts.brokenCount,
       avgLatencyMs,
       lastRunAt: selectedRun
         ? new Date(selectedRun.finishedAt ?? selectedRun.createdAt).toLocaleTimeString()
         : "—",
+      hasRun: Boolean(selectedRun && results.length > 0),
+      firstBroken: firstBrokenResult
+        ? {
+            endpointId: firstBrokenResult.endpointId,
+            method: firstBrokenResult.endpoint.method,
+            path: firstBrokenResult.endpoint.path,
+            statusCode: firstBrokenResult.statusCode,
+            errorMessage: firstBrokenResult.errorMessage,
+            request: firstBrokenResult.probe?.request ?? null,
+          }
+        : null,
     },
     incidents,
   };
@@ -319,5 +340,6 @@ export function useProject(): ProjectContextValue {
 }
 
 export function resultForEndpoint(run: TestRun | null, endpointId: string): TestResult | undefined {
-  return run?.results?.find((r) => r.endpointId === endpointId);
+  const matches = (run?.results ?? []).filter((r) => r.endpointId === endpointId);
+  return rollupResultsByEndpoint(matches)[0];
 }

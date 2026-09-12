@@ -141,6 +141,17 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  explainRun: (
+    token: string,
+    projectId: string,
+    data: { runId?: string; endpointId?: string } = {}
+  ) =>
+    request<{ explanation: string }>(`/projects/${projectId}/explain`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(data),
+    }),
+
   tryEndpoint: (
     token: string,
     projectId: string,

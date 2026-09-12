@@ -12,6 +12,7 @@ import {
   isRegisterEndpoint,
   planProbes,
 } from "./zeroInput";
+import { classifyOutcome, pickWorseResult } from "./outcome";
 
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -146,6 +147,7 @@ async function executeProjectTests(testRunId: string, projectId: string, dryRun:
         continue;
       }
 
+      const attempts: { exec: ExecutionResult; probe: ProbeRecord }[] = [];
       for (const probe of probes) {
         const built = buildZeroInputRequest(
           endpoint,
@@ -156,11 +158,9 @@ async function executeProjectTests(testRunId: string, projectId: string, dryRun:
         );
         const documented = asStatusList(endpoint.documentedStatuses, endpoint.expectedStatus);
         const execResult = await executeRequest(built, documented, probe.kind, endpoint.path);
-        await saveResult(
-          testRunId,
-          endpoint.id,
-          execResult,
-          withSnapshot(
+        attempts.push({
+          exec: execResult,
+          probe: withSnapshot(
             execResult,
             {
               sent: probe.sent,
@@ -168,9 +168,17 @@ async function executeProjectTests(testRunId: string, projectId: string, dryRun:
               proves: probe.proves,
             },
             endpoint.path
-          )
-        );
+          ),
+        });
       }
+
+      const worstExec = pickWorseResult(attempts.map((a) => a.exec));
+      const winner = attempts.find((a) => a.exec === worstExec) ?? attempts[attempts.length - 1];
+      if (attempts.length > 1) {
+        const label = classifyOutcome(winner.exec);
+        winner.probe.proves = `${winner.probe.proves} · ${attempts.length} probes, kept ${label}`;
+      }
+      await saveResult(testRunId, endpoint.id, winner.exec, winner.probe);
     }
 
     await prisma.testRun.update({

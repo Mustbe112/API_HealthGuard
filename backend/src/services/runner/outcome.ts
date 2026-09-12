@@ -2,6 +2,43 @@
 
 export type ProbeOutcome = "working" | "broken" | "manual" | "skipped";
 
+/** Broken beats needs-login, which beats skipped, which beats working. */
+export const OUTCOME_RANK: Record<ProbeOutcome, number> = {
+  broken: 3,
+  manual: 2,
+  skipped: 1,
+  working: 0,
+};
+
+export function isWorseOutcome(next: ProbeOutcome, current: ProbeOutcome): boolean {
+  return OUTCOME_RANK[next] > OUTCOME_RANK[current];
+}
+
+export function pickWorseResult<T extends { passed: boolean; statusCode: number | null }>(
+  results: T[]
+): T | undefined {
+  let chosen: T | undefined;
+  for (const result of results) {
+    if (!chosen || isWorseOutcome(classifyOutcome(result), classifyOutcome(chosen))) {
+      chosen = result;
+    }
+  }
+  return chosen;
+}
+
+export function rollupResultsByEndpoint<
+  T extends { endpointId: string; passed: boolean; statusCode: number | null },
+>(results: T[]): T[] {
+  const chosen = new Map<string, T>();
+  for (const result of results) {
+    const prev = chosen.get(result.endpointId);
+    if (!prev || isWorseOutcome(classifyOutcome(result), classifyOutcome(prev))) {
+      chosen.set(result.endpointId, result);
+    }
+  }
+  return [...chosen.values()];
+}
+
 export function classifyOutcome(result: {
   passed: boolean;
   statusCode: number | null;
@@ -23,18 +60,24 @@ export function classifyOutcome(result: {
 }
 
 export function summarizeOutcomes(
-  results: { passed: boolean; statusCode: number | null }[]
+  results: { passed: boolean; statusCode: number | null; endpointId?: string }[]
 ): {
   workingCount: number;
   brokenCount: number;
   skippedCount: number;
   manualCount: number;
 } {
+  const canRollup = results.length > 0 && results.every((r) => typeof r.endpointId === "string");
+  const rows = canRollup
+    ? rollupResultsByEndpoint(
+        results as { endpointId: string; passed: boolean; statusCode: number | null }[]
+      )
+    : results;
   let workingCount = 0;
   let brokenCount = 0;
   let skippedCount = 0;
   let manualCount = 0;
-  for (const r of results) {
+  for (const r of rows) {
     switch (classifyOutcome(r)) {
       case "working":
         workingCount += 1;
