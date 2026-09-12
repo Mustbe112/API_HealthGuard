@@ -4,6 +4,7 @@ import { createProject, listProjects, getProject, updateProject, updateEndpoint 
 import { uploadMiddleware, uploadSpec } from "../controllers/upload.controller";
 import { discoverSpec } from "../controllers/discover.controller";
 import { triggerRun, getRun, listRuns } from "../controllers/testRun.controller";
+import { explainRun } from "../controllers/explain.controller";
 import { tryEndpoint } from "../controllers/try.controller";
 import {
   setProjectVariable,
@@ -25,6 +26,7 @@ router.patch("/:projectId/endpoints/:endpointId", updateEndpoint);
 router.post("/:projectId/endpoints/:endpointId/try", tryEndpoint);
 
 router.post("/:projectId/run", triggerRun);
+router.post("/:projectId/explain", explainRun);
 router.get("/:projectId/runs", listRuns);
 router.get("/:projectId/runs/:runId", getRun);
 

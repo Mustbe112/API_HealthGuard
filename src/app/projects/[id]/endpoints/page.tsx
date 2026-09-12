@@ -31,7 +31,12 @@ export default function EndpointsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-text">Endpoints</h1>
+      <div className="flex items-end justify-between gap-3">
+        <h1 className="text-xl font-semibold text-text">Endpoints</h1>
+        <Link href={`/projects/${project.id}/map`} className="text-sm text-link hover:underline">
+          View API map
+        </Link>
+      </div>
       <div className="overflow-x-auto rounded-md border border-line bg-surface">
         <table className="w-full text-left text-sm">
           <thead className="text-xs text-text-muted">

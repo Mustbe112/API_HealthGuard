@@ -18,7 +18,7 @@ async function assertProjectOwnership(projectId: string, userId: string) {
 }
 
 function summarizeResults(
-  results: { passed: boolean; statusCode: number | null }[]
+  results: { passed: boolean; statusCode: number | null; endpointId?: string }[]
 ) {
   return summarizeOutcomes(results);
 }
@@ -67,7 +67,7 @@ async function listRunsHandler(req: Request, res: Response) {
   const rows = await prisma.testRun.findMany({
     where: { projectId },
     orderBy: { createdAt: "desc" },
-    include: { results: { select: { passed: true, statusCode: true } } },
+    include: { results: { select: { passed: true, statusCode: true, endpointId: true } } },
   });
 
   const testRuns = rows.map(({ results, ...run }) => ({

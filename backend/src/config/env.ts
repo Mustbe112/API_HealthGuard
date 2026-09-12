@@ -1,10 +1,18 @@
+import path from "path";
 import dotenv from "dotenv";
 
 // One repo-root .env for Next, Express, and Prisma. Do not add backend/.env.
-dotenv.config();
+dotenv.config({
+  path: path.resolve(process.cwd(), ".env"),
+  override: true,
+});
+
+function clean(value: string | undefined): string {
+  return (value ?? "").trim().replace(/^['"]|['"]$/g, "");
+}
 
 function required(name: string): string {
-  const value = process.env[name];
+  const value = clean(process.env[name]);
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
@@ -30,4 +38,6 @@ export const env = {
   databaseUrl: required("DATABASE_URL"),
   jwtSecret: required("JWT_SECRET"),
   encryptionKey: required("ENCRYPTION_KEY"),
+  groqApiKey: clean(process.env.GROQ_API_KEY),
+  groqModel: clean(process.env.GROQ_MODEL) || "openai/gpt-oss-20b", // current Groq free-tier chat model
 };

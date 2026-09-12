@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { classifyOutcome } from "@/lib/outcome";
+import { classifyOutcome, rollupResultsByEndpoint } from "@/lib/outcome";
 import { useProject } from "@/lib/project-context";
 import { healthFromOutcome } from "@/lib/workbench-health";
 import { HealthBanner } from "@/components/workbench/HealthBanner";
@@ -10,17 +10,19 @@ import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { MethodBadge } from "@/components/MethodBadge";
 import { LatencyBar } from "@/components/LatencyBar";
 
-type Filter = "all" | "passed" | "failed";
+type Filter = "all" | "working" | "login" | "broken";
 
 export default function DashboardPage() {
-  const { project, selectedRun, summary, openConnect, error, uploadMsg } = useProject();
+  const { project, selectedRun, summary, openConnect, error, uploadMsg, addVariable, startRun, running } =
+    useProject();
   const [filter, setFilter] = useState<Filter>("all");
-  const results = selectedRun?.results ?? [];
+  const results = rollupResultsByEndpoint(selectedRun?.results ?? []);
   const maxMs = Math.max(1, ...results.map((r) => r.responseTimeMs ?? 0));
   const filtered = results.filter((r) => {
-    const health = healthFromOutcome(classifyOutcome(r));
-    if (filter === "passed") return health === "healthy";
-    if (filter === "failed") return health !== "healthy";
+    const outcome = classifyOutcome(r);
+    if (filter === "working") return outcome === "working";
+    if (filter === "login") return outcome === "manual";
+    if (filter === "broken") return outcome === "broken";
     return true;
   });
 
@@ -54,9 +56,18 @@ export default function DashboardPage() {
         <p className="text-sm text-text-muted">{project.baseUrl}</p>
       </div>
       {error && <p className="text-sm text-unhealthy">{error}</p>}
-      <HealthBanner summary={summary} />
+      <HealthBanner
+        summary={summary}
+        projectId={project.id}
+        runId={selectedRun?.id}
+        running={running}
+        onSaveTokenAndRecheck={async (tokenValue) => {
+          await addVariable("API_TOKEN", tokenValue, true);
+          await startRun();
+        }}
+      />
       <div className="flex gap-1">
-        {(["all", "passed", "failed"] as const).map((f) => (
+        {(["all", "working", "login", "broken"] as const).map((f) => (
           <button
             key={f}
             type="button"
@@ -65,7 +76,7 @@ export default function DashboardPage() {
               filter === f ? "bg-surface text-text" : "text-text-muted hover:text-text"
             }`}
           >
-            {f === "all" ? "All" : f === "passed" ? "Passed" : "Failed"}
+            {f === "all" ? "All" : f === "working" ? "Working" : f === "login" ? "Needs a login" : "Broken"}
           </button>
         ))}
       </div>
