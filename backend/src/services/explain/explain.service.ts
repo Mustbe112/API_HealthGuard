@@ -153,6 +153,19 @@ export async function explainHealthCheck(opts: {
 
 const MODEL_FALLBACKS = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.6-27b"];
 
+function explanationFromMessage(message?: {
+  content?: string | null;
+  reasoning?: string | null;
+  reasoning_content?: string | null;
+} | null): string {
+  const parts = [message?.content, message?.reasoning_content, message?.reasoning];
+  for (const part of parts) {
+    const text = typeof part === "string" ? part.trim() : "";
+    if (text) return text;
+  }
+  return "";
+}
+
 async function callGroq(system: string, user: string): Promise<string> {
   const models = [env.groqModel, ...MODEL_FALLBACKS.filter((m) => m !== env.groqModel)];
   let lastError = "Could not reach Groq.";
@@ -170,7 +183,7 @@ async function callGroq(system: string, user: string): Promise<string> {
         body: JSON.stringify({
           model,
           temperature: 0.3,
-          max_tokens: 400,
+          max_tokens: 1200,
           messages: [
             { role: "system", content: system },
             { role: "user", content: user },
@@ -180,11 +193,17 @@ async function callGroq(system: string, user: string): Promise<string> {
       });
       const body = (await res.json().catch(() => null)) as {
         error?: { message?: string };
-        choices?: { message?: { content?: string } }[];
+        choices?: {
+          message?: {
+            content?: string | null;
+            reasoning?: string | null;
+            reasoning_content?: string | null;
+          };
+        }[];
       } | null;
 
       if (res.ok) {
-        const text = body?.choices?.[0]?.message?.content?.trim();
+        const text = explanationFromMessage(body?.choices?.[0]?.message);
         if (!text) throw new ExplainFailedError("Groq returned an empty explanation.", 502);
         return text;
       }
