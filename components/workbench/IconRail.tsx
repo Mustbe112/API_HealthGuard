@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITEMS = [
-  { to: "", label: "Dashboard", icon: DashIcon, end: true },
-  { to: "/endpoints", label: "Endpoints", icon: ListIcon, end: false },
-  { to: "/map", label: "API map", icon: MapIcon, end: false },
-  { to: "/history", label: "History", icon: ClockIcon, end: false },
-  { to: "/incidents", label: "Incidents", icon: AlertIcon, end: false },
-  { to: "/settings", label: "Settings", icon: GearIcon, end: false },
+  { to: "", label: "Dashboard", short: "Home", icon: DashIcon, end: true },
+  { to: "/endpoints", label: "Endpoints", short: "Routes", icon: ListIcon, end: false },
+  { to: "/map", label: "API map", short: "Map", icon: MapIcon, end: false },
+  { to: "/history", label: "History", short: "History", icon: ClockIcon, end: false },
+  { to: "/incidents", label: "Incidents", short: "Issues", icon: AlertIcon, end: false },
+  { to: "/settings", label: "Settings", short: "Setup", icon: GearIcon, end: false },
 ];
 
 export function IconRail({ projectId }: { projectId: string }) {
@@ -17,31 +17,29 @@ export function IconRail({ projectId }: { projectId: string }) {
   const base = `/projects/${projectId}`;
 
   return (
-    <nav className="flex h-full w-12 shrink-0 flex-col items-center bg-rail py-3">
+    <nav className="flex h-full w-14 shrink-0 flex-col items-center bg-rail py-3">
       <Link
         href={base}
         title="API HealthGuard"
-        className="mb-6 flex h-7 w-7 items-center justify-center rounded bg-run text-[10px] font-semibold text-white"
+        className="mb-4 flex h-8 w-8 items-center justify-center rounded bg-run text-[10px] font-semibold text-white"
       >
         HG
       </Link>
-      <div className="flex flex-1 flex-col gap-1">
+      <div className="flex flex-1 flex-col gap-0.5">
         {ITEMS.map((item) => {
           const href = `${base}${item.to}`;
-          const active = item.end
-            ? pathname === base
-            : pathname.startsWith(href);
+          const active = item.end ? pathname === base : pathname.startsWith(href);
           return (
             <Link
               key={item.to || "dash"}
               href={href}
               title={item.label}
-              className={`flex h-10 w-10 items-center justify-center rounded ${
-                active ? "text-run" : "text-white/70 hover:text-white"
+              className={`flex h-12 w-12 flex-col items-center justify-center rounded-md ${
+                active ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/5 hover:text-white"
               }`}
             >
               <item.icon />
-              <span className="sr-only">{item.label}</span>
+              <span className="mt-0.5 text-[9px] leading-none">{item.short}</span>
             </Link>
           );
         })}
@@ -49,10 +47,10 @@ export function IconRail({ projectId }: { projectId: string }) {
       <Link
         href="/projects"
         title="Back to projects"
-        className="mt-auto flex h-10 w-10 items-center justify-center rounded text-white/70 hover:text-white"
+        className="mt-auto flex h-12 w-12 flex-col items-center justify-center rounded-md text-white/55 hover:bg-white/5 hover:text-white"
       >
         <BackIcon />
-        <span className="sr-only">Back to projects</span>
+        <span className="mt-0.5 text-[9px] leading-none">Back</span>
       </Link>
     </nav>
   );

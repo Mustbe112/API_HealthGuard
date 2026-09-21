@@ -32,7 +32,7 @@ export function HealthCharts({
   if (total === 0 && history.length === 0) return null;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid items-stretch gap-4 lg:grid-cols-3">
       <ChartCard title="Health mix">
         {total === 0 ? (
           <p className="text-xs text-text-muted">Run a health check to see the split.</p>
@@ -98,9 +98,9 @@ export function HealthCharts({
 
 function ChartCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-md border border-line bg-surface p-4">
-      <h2 className="mb-3 text-sm font-medium text-text">{title}</h2>
-      {children}
+    <section className="flex min-h-[220px] flex-col overflow-hidden rounded-md border border-line bg-surface p-4">
+      <h2 className="mb-3 shrink-0 text-sm font-medium text-text">{title}</h2>
+      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
     </section>
   );
 }

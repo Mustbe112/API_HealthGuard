@@ -5,7 +5,7 @@ import { classifyHealth, scoreFromCounts } from "@/lib/workbench-health";
 import { summarizeOutcomes } from "@/lib/outcome";
 import { useProject } from "@/lib/project-context";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 export default function HistoryPage() {
   const { runs, selectRun, projectId } = useProject();
@@ -13,56 +13,59 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
-      <h1 className="mb-4 text-xl font-semibold text-text">Test history</h1>
-      <div className="rounded-md border border-line bg-surface">
-        <table className="w-full text-left text-sm">
-          <thead className="text-xs text-text-muted">
-            <tr className="border-b border-line">
-              <th className="px-4 py-2 font-medium">Run</th>
-              <th className="px-4 py-2 font-medium">Endpoints</th>
-              <th className="px-4 py-2 font-medium">Score</th>
-              <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {runs.map((run, index) => {
-              const counts = {
-                workingCount: run.workingCount ?? 0,
-                brokenCount: run.brokenCount ?? 0,
-                skippedCount: run.skippedCount ?? 0,
-                manualCount: run.manualCount ?? 0,
-              };
-              const endpointCount =
-                counts.workingCount + counts.brokenCount + counts.skippedCount + counts.manualCount ||
-                summarizeOutcomes(run.results ?? []).workingCount;
-              const score = scoreFromCounts(counts);
-              const status = classifyHealth(score);
-              return (
-                <tr
-                  key={run.id}
-                  className="cursor-pointer border-b border-line last:border-0 hover:bg-bg"
-                  onClick={() => {
-                    void selectRun(run.id).then(() => router.push(`/projects/${projectId}`));
-                  }}
-                >
-                  <td className="px-4 py-2">#{runs.length - index}</td>
-                  <td className="px-4 py-2">{endpointCount || "—"}</td>
-                  <td className="px-4 py-2">{score}</td>
-                  <td className="px-4 py-2">
-                    <HealthBadge status={status} />
-                    {run.dryRun && <span className="ml-2 text-xs text-text-muted">dry run</span>}
-                  </td>
-                  <td className="px-4 py-2 text-text-muted">
-                    {new Date(run.finishedAt ?? run.createdAt).toLocaleString()}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <PageHeader title="Test history" />
+      {runs.length === 0 ? (
+        <p className="text-sm text-text-muted">No checks yet. Run a health check from the header.</p>
+      ) : (
+        <div className="wb-scroll">
+          <table className="wb-table">
+            <thead>
+              <tr>
+                <th className="w-20">Run</th>
+                <th className="w-28">Endpoints</th>
+                <th className="w-20">Score</th>
+                <th className="w-40">Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((run, index) => {
+                const counts = {
+                  workingCount: run.workingCount ?? 0,
+                  brokenCount: run.brokenCount ?? 0,
+                  skippedCount: run.skippedCount ?? 0,
+                  manualCount: run.manualCount ?? 0,
+                };
+                const endpointCount =
+                  counts.workingCount + counts.brokenCount + counts.skippedCount + counts.manualCount ||
+                  summarizeOutcomes(run.results ?? []).workingCount;
+                const score = scoreFromCounts(counts);
+                const status = classifyHealth(score);
+                return (
+                  <tr
+                    key={run.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      void selectRun(run.id).then(() => router.push(`/projects/${projectId}`));
+                    }}
+                  >
+                    <td>#{runs.length - index}</td>
+                    <td>{endpointCount || "—"}</td>
+                    <td>{score}</td>
+                    <td>
+                      <HealthBadge status={status} />
+                      {run.dryRun && <span className="ml-2 text-xs text-text-muted">dry run</span>}
+                    </td>
+                    <td className="truncate text-text-muted">
+                      {new Date(run.finishedAt ?? run.createdAt).toLocaleString()}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

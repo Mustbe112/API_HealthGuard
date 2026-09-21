@@ -7,7 +7,7 @@ import { useProject } from "@/lib/project-context";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/Button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 export default function SettingsPage() {
   const { token } = useAuth();
@@ -49,9 +49,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-lg space-y-6">
-      <BackButton href={project ? `/projects/${project.id}/endpoints` : "/projects"} label="Endpoints" />
-      <h1 className="text-xl font-semibold text-text">Settings</h1>
+    <div className="max-w-lg">
+      <PageHeader title="Settings" />
+      <div className="space-y-4">
       {error && <p className="text-sm text-unhealthy">{error}</p>}
 
       <section className="rounded-md border border-line bg-surface p-4">
@@ -128,6 +128,7 @@ export default function SettingsPage() {
           {deleting ? "Deleting…" : "Delete project"}
         </Button>
       </section>
+      </div>
     </div>
   );
 }
