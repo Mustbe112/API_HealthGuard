@@ -188,3 +188,150 @@ body {
   border-radius: 0.375rem;
   background: var(--surface);
 }
+
+@keyframes hg-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hg-ribbon-float {
+  0%,
+  100% {
+    transform: translateX(-12%) translateY(0);
+  }
+  50% {
+    transform: translateX(-9%) translateY(-14px);
+  }
+}
+
+@keyframes hg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hg-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes hg-scan {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes hg-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.hg-enter-item {
+  animation: hg-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hg-fade-in {
+  animation: hg-fade-in 0.55s ease-out both;
+}
+
+.hg-d1 {
+  animation-delay: 70ms;
+}
+.hg-d2 {
+  animation-delay: 140ms;
+}
+.hg-d3 {
+  animation-delay: 220ms;
+}
+.hg-d4 {
+  animation-delay: 300ms;
+}
+.hg-d5 {
+  animation-delay: 400ms;
+}
+.hg-d6 {
+  animation-delay: 520ms;
+}
+
+.hg-ribbon-float {
+  animation: hg-ribbon-float 10s ease-in-out infinite;
+}
+
+.hg-spin {
+  animation: hg-spin 0.75s linear infinite;
+}
+
+.hg-pulse-ring {
+  animation: hg-pulse-ring 1.8s ease-out infinite;
+}
+
+.hg-pulse-ring-delay {
+  animation-delay: 0.6s;
+}
+
+.hg-scan {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent) 50%,
+    transparent 100%
+  );
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: hg-scan 1.2s ease-in-out infinite;
+}
+
+.hg-shimmer {
+  background-color: var(--line);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--text) 14%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: hg-shimmer 1.3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hg-enter-item,
+  .hg-fade-in,
+  .hg-ribbon-float,
+  .hg-spin,
+  .hg-pulse-ring,
+  .hg-scan,
+  .hg-shimmer {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -11,11 +11,12 @@ import { MethodBadge } from "@/components/MethodBadge";
 import { LatencyBar } from "@/components/LatencyBar";
 import { HealthCharts } from "@/components/workbench/HealthCharts";
 import { PageHeader } from "@/components/workbench/PageHeader";
+import { PageLoader, ProbeLoader } from "@/components/LoadingState";
 
 type Filter = "all" | "working" | "login" | "broken";
 
 export default function DashboardPage() {
-  const { project, selectedRun, summary, openConnect, error, uploadMsg, addVariable, startRun, running, runs } =
+  const { project, selectedRun, summary, openConnect, error, uploadMsg, addVariable, startRun, running, runs, isProbing, probePhase } =
     useProject();
   const [filter, setFilter] = useState<Filter>("all");
   const results = rollupResultsByEndpoint(selectedRun?.results ?? []);
@@ -29,7 +30,18 @@ export default function DashboardPage() {
   });
 
   if (!project) {
-    return <p className="text-sm text-text-muted">Loading…</p>;
+    return <PageLoader label="Opening project…" />;
+  }
+
+  if (isProbing) {
+    return (
+      <ProbeLoader
+        title={probePhase === "discover" ? "Discovering your API" : "Running health check"}
+        message={uploadMsg}
+        baseUrl={project.baseUrl}
+        phase={probePhase}
+      />
+    );
   }
 
   if (!(project.endpoints?.length) && !selectedRun) {

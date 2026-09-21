@@ -10,6 +10,7 @@ import { IconRail } from "./IconRail";
 import { IncidentRail } from "./IncidentRail";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RunButton } from "./RunButton";
+import { Spinner } from "@/components/LoadingState";
 import type { ReactNode } from "react";
 
 export function WorkbenchShell({ children }: { children: ReactNode }) {
@@ -61,7 +62,14 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
             onClick={() => void ctx.startRun()}
             disabled={ctx.running || !(ctx.project?.endpoints?.length)}
           >
-            {ctx.running ? "Running…" : "Run check"}
+            {ctx.running ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner className="h-3.5 w-3.5" />
+                Running…
+              </span>
+            ) : (
+              "Run check"
+            )}
           </RunButton>
           <ThemeToggle />
           <span className="hidden max-w-[160px] truncate text-xs text-text-muted xl:inline">
@@ -85,6 +93,7 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
             apiName={ctx.project?.name ?? "No API"}
             endpoints={ctx.project?.endpoints ?? []}
             onImport={() => ctx.openConnect()}
+            discovering={!ctx.project || (ctx.isProbing && !(ctx.project.endpoints?.length))}
           />
           <main className="min-h-0 min-w-0 flex-1 overflow-auto bg-bg">
             <div className="mx-auto w-full max-w-[1080px] px-6 py-6">{children}</div>

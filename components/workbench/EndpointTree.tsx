@@ -5,17 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Endpoint } from "@/lib/types";
 import { MethodBadge } from "@/components/MethodBadge";
+import { EndpointTreeSkeleton } from "@/components/LoadingState";
 
 export function EndpointTree({
   projectId,
   apiName,
   endpoints,
   onImport,
+  discovering,
 }: {
   projectId: string;
   apiName: string;
   endpoints: Endpoint[];
   onImport: () => void;
+  discovering?: boolean;
 }) {
   const [q, setQ] = useState("");
   const pathname = usePathname();
@@ -44,7 +47,9 @@ export function EndpointTree({
         <p className="mb-2 truncate px-2 text-[11px] font-medium uppercase tracking-wide text-text-muted">
           {apiName}
         </p>
-        {visible.length === 0 ? (
+        {discovering && endpoints.length === 0 ? (
+          <EndpointTreeSkeleton />
+        ) : visible.length === 0 ? (
           <p className="px-2 py-4 text-xs text-text-muted">
             No endpoints yet. Import an OpenAPI or Swagger spec to add POST, PUT, and DELETE routes.
           </p>
