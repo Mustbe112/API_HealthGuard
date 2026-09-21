@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { MethodBadge } from "@/components/MethodBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LogoIcon } from "@/components/BrandMark";
 
 export default function Home() {
   const { token } = useAuth();
@@ -17,8 +18,8 @@ export default function Home() {
 
       <header className="sticky top-0 z-20 border-b border-line/80 bg-ink/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2 font-display text-base font-semibold tracking-tight">
-            <PulseMark />
+          <Link href="/" className="flex items-center gap-2 font-display text-base font-semibold tracking-tight" aria-label="API Vitals">
+            <LogoIcon className="h-7 w-7" />
             API Vitals
           </Link>
 
@@ -148,21 +149,13 @@ export default function Home() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 text-xs text-text-muted">
           <span className="flex items-center gap-2 font-display text-sm text-text">
-            <PulseMark />
+            <LogoIcon className="h-6 w-6" />
             API Vitals
           </span>
           <span>Upload a spec. Run. See what&apos;s broken.</span>
         </div>
       </footer>
     </div>
-  );
-}
-
-function PulseMark() {
-  return (
-    <span className="relative flex h-6 w-6 items-center justify-center rounded-md bg-panel-raised ring-1 ring-line">
-      <span className="h-1.5 w-1.5 rounded-full bg-pass" />
-    </span>
   );
 }
 
