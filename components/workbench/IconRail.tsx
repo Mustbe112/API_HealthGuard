@@ -19,17 +19,8 @@ export function IconRail({ projectId }: { projectId: string }) {
 
   return (
     <nav className="flex h-full w-14 shrink-0 flex-col items-center bg-rail py-3">
-      <Link
-        href={base}
-        title="API HealthGuard"
-<<<<<<< ours
-        aria-label="API HealthGuard"
-        className="mb-6"
-=======
-        className="mb-4 flex h-8 w-8 items-center justify-center rounded bg-run text-[10px] font-semibold text-white"
->>>>>>> theirs
-      >
-        <LogoIcon className="h-7 w-7" />
+      <Link href={base} title="API HealthGuard" aria-label="API HealthGuard" className="mb-4">
+        <LogoIcon className="h-8 w-8" />
       </Link>
       <div className="flex flex-1 flex-col gap-0.5">
         {ITEMS.map((item) => {

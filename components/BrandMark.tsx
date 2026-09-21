@@ -23,9 +23,7 @@ export function BrandMark({ href = "/", compact = false }: { href?: string; comp
   return (
     <Link href={href} className="inline-flex items-center gap-2 text-text hover:text-accent" aria-label="API HealthGuard">
       <LogoIcon />
-      {compact ? null : (
-        <span className="text-sm font-semibold tracking-tight">API HealthGuard</span>
-      )}
+      {compact ? null : <span className="text-sm font-semibold tracking-tight">API HealthGuard</span>}
     </Link>
   );
 }
