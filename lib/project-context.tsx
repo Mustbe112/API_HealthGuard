@@ -63,6 +63,7 @@ type ProjectContextValue = {
     workingCount: number;
     manualCount: number;
     brokenCount: number;
+    skippedCount: number;
     avgLatencyMs: number;
     lastRunAt: string;
     hasRun: boolean;
@@ -311,6 +312,7 @@ export function ProjectProvider({
       workingCount: counts.workingCount,
       manualCount: counts.manualCount,
       brokenCount: counts.brokenCount,
+      skippedCount: counts.skippedCount,
       avgLatencyMs,
       lastRunAt: selectedRun
         ? new Date(selectedRun.finishedAt ?? selectedRun.createdAt).toLocaleTimeString()

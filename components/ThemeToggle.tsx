@@ -2,7 +2,7 @@
 
 import { useTheme } from "@/lib/theme-context";
 
-export function ThemeToggle() {
+export function ThemeToggle({ showLabel = false }: { showLabel?: boolean }) {
   const { theme, toggleTheme } = useTheme();
   const next = theme === "light" ? "dark" : "light";
 
@@ -12,9 +12,12 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       title={`Switch to ${next} theme`}
       aria-label={`Switch to ${next} theme`}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-text hover:border-accent/50 hover:text-accent"
+      className={`inline-flex items-center justify-center rounded-full border border-line bg-surface text-text hover:border-accent/50 hover:text-accent ${
+        showLabel ? "h-9 gap-1.5 px-3 text-xs font-medium" : "h-9 w-9"
+      }`}
     >
       {theme === "light" ? <MoonIcon /> : <SunIcon />}
+      {showLabel ? <span className="hidden capitalize sm:inline">{theme}</span> : null}
     </button>
   );
 }

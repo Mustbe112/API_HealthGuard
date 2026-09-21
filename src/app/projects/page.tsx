@@ -21,6 +21,7 @@ export default function ProjectsPage() {
   const [name, setName] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isReady) return;
@@ -49,6 +50,22 @@ export default function ProjectsPage() {
     }
   }
 
+  async function handleDelete(project: Project) {
+    if (!token) return;
+    const ok = window.confirm(`Delete “${project.name}”? This cannot be undone.`);
+    if (!ok) return;
+    setDeletingId(project.id);
+    setError(null);
+    try {
+      await api.deleteProject(token, project.id);
+      setProjects((prev) => (prev ?? []).filter((p) => p.id !== project.id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete project");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (!isReady || !token) return null;
 
   return (
@@ -57,7 +74,7 @@ export default function ProjectsPage() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <BrandMark />
           <div className="flex items-center gap-4 text-sm text-text-muted">
-            <ThemeToggle />
+            <ThemeToggle showLabel />
             <span>{user?.email}</span>
             <button onClick={logout} className="hover:text-text">
               Sign out
@@ -124,17 +141,23 @@ export default function ProjectsPage() {
         ) : (
           <div className="grid gap-3">
             {projects.map((p) => (
-              <Link
+              <div
                 key={p.id}
-                href={`/projects/${p.id}`}
-                className="flex items-center justify-between rounded-md border border-line bg-surface px-5 py-4 transition-colors hover:border-run/50"
+                className="flex items-center gap-3 rounded-md border border-line bg-surface px-5 py-4 transition-colors hover:border-run/50"
               >
-                <div>
+                <Link href={`/projects/${p.id}`} className="min-w-0 flex-1">
                   <div className="font-medium">{p.name}</div>
-                  <div className="font-mono text-xs text-text-muted">{p.baseUrl}</div>
-                </div>
-                <span className="text-text-muted">→</span>
-              </Link>
+                  <div className="truncate font-mono text-xs text-text-muted">{p.baseUrl}</div>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void handleDelete(p)}
+                  disabled={deletingId === p.id}
+                  className="rounded px-2 py-1 text-xs text-text-muted hover:bg-unhealthy-soft hover:text-unhealthy disabled:opacity-50"
+                >
+                  {deletingId === p.id ? "Deleting…" : "Delete"}
+                </button>
+              </div>
             ))}
           </div>
         )}

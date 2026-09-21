@@ -1,15 +1,24 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { useProject } from "@/lib/project-context";
+import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/Button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { BackButton } from "@/components/BackButton";
 
 export default function SettingsPage() {
+  const { token } = useAuth();
   const { project, variables, addVariable, deleteVariable, error } = useProject();
+  const router = useRouter();
   const [key, setKey] = useState("");
   const [value, setValue] = useState("");
   const [secret, setSecret] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function onAdd(e: FormEvent) {
     e.preventDefault();
@@ -24,8 +33,24 @@ export default function SettingsPage() {
     }
   }
 
+  async function onDeleteProject() {
+    if (!token || !project) return;
+    const ok = window.confirm(`Delete “${project.name}”? This cannot be undone.`);
+    if (!ok) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteProject(token, project.id);
+      router.push("/projects");
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Failed to delete project");
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="max-w-lg space-y-6">
+      <BackButton href={project ? `/projects/${project.id}/endpoints` : "/projects"} label="Endpoints" />
       <h1 className="text-xl font-semibold text-text">Settings</h1>
       {error && <p className="text-sm text-unhealthy">{error}</p>}
 
@@ -80,6 +105,28 @@ export default function SettingsPage() {
             Add variable
           </Button>
         </form>
+      </section>
+
+      <section className="rounded-md border border-line bg-surface p-4">
+        <h2 className="text-sm font-medium">Theme</h2>
+        <p className="mt-1 mb-3 text-xs text-text-muted">Switch between light and dark for the workbench.</p>
+        <ThemeToggle showLabel />
+      </section>
+
+      <section className="rounded-md border border-unhealthy/30 bg-surface p-4">
+        <h2 className="text-sm font-medium text-unhealthy">Delete project</h2>
+        <p className="mt-1 mb-3 text-xs text-text-muted">
+          Removes this project, its endpoints, and all health-check history.
+        </p>
+        {deleteError && <p className="mb-3 text-xs text-unhealthy">{deleteError}</p>}
+        <Button
+          type="button"
+          onClick={() => void onDeleteProject()}
+          disabled={deleting}
+          className="!bg-unhealthy !text-white hover:!bg-unhealthy/90"
+        >
+          {deleting ? "Deleting…" : "Delete project"}
+        </Button>
       </section>
     </div>
   );

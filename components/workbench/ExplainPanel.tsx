@@ -59,27 +59,17 @@ export function ExplainPanel({
 }
 
 function ExplanationBody({ text }: { text: string }) {
-  const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
   return (
-    <div className="space-y-2">
-      {blocks.map((block, i) => {
-        const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-        const bullets = lines.every((l) => /^[-*•]\s+/.test(l));
-        if (bullets) {
-          return (
-            <ul key={i} className="list-disc space-y-1 pl-5">
-              {lines.map((l, j) => (
-                <li key={j}>{l.replace(/^[-*•]\s+/, "")}</li>
-              ))}
-            </ul>
-          );
-        }
-        return (
-          <p key={i} className="whitespace-pre-wrap">
-            {block}
-          </p>
-        );
-      })}
+    <div className="max-w-2xl space-y-3 leading-relaxed text-text">
+      {paragraphs.map((p, i) => (
+        <p key={i}>{p}</p>
+      ))}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { classifyHealth, scoreFromCounts } from "@/lib/workbench-health";
 import { summarizeOutcomes } from "@/lib/outcome";
 import { useProject } from "@/lib/project-context";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
+import { BackButton } from "@/components/BackButton";
 
 export default function HistoryPage() {
   const { runs, selectRun, projectId } = useProject();
@@ -12,6 +13,7 @@ export default function HistoryPage() {
 
   return (
     <div>
+      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
       <h1 className="mb-4 text-xl font-semibold text-text">Test history</h1>
       <div className="rounded-md border border-line bg-surface">
         <table className="w-full text-left text-sm">

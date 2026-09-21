@@ -9,6 +9,7 @@ import { EndpointTree } from "./EndpointTree";
 import { IconRail } from "./IconRail";
 import { IncidentRail } from "./IncidentRail";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BackButton } from "@/components/BackButton";
 import { RunButton } from "./RunButton";
 import type { ReactNode } from "react";
 
@@ -34,14 +35,24 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
         onImport={() => ctx.openConnect()}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-line bg-surface px-4">
-          <p className="hidden truncate text-sm text-text-muted sm:block">
-            <Link href="/projects" className="text-text hover:text-link">
-              Project
+        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4">
+          <div className="flex min-w-0 items-center gap-1">
+            <BackButton href="/projects" label="Projects" />
+            <span className="hidden text-text-muted sm:inline">/</span>
+            <Link
+              href={`/projects/${ctx.projectId}`}
+              className="hidden truncate text-sm text-text hover:text-link sm:inline"
+            >
+              {ctx.project?.name ?? "Connect an API"}
             </Link>
-            <span className="mx-1">/</span>
-            {ctx.project?.name ?? "Connect an API"}
-          </p>
+            <span className="hidden text-text-muted sm:inline">/</span>
+            <Link
+              href={`/projects/${ctx.projectId}/endpoints`}
+              className="hidden truncate text-sm text-text-muted hover:text-text sm:inline"
+            >
+              Endpoints
+            </Link>
+          </div>
           <div className="flex items-center gap-3">
             <label className="hidden items-center gap-1.5 text-xs text-text-muted sm:flex">
               <input
@@ -57,7 +68,7 @@ export function WorkbenchShell({ children }: { children: ReactNode }) {
             >
               {ctx.running ? "Running…" : pathname.includes("/endpoints/") ? "Run again" : "Run health check"}
             </RunButton>
-            <ThemeToggle />
+            <ThemeToggle showLabel />
             <span className="text-xs text-text-muted">{user?.email}</span>
             <button
               type="button"
