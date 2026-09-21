@@ -9,6 +9,7 @@ backend/dist/
 *.tsbuildinfo
 next-env.d.ts
 .cursor/
+AGENTS.md
 CLAUDE.md
 UI_LOCK.md
 frontend/
