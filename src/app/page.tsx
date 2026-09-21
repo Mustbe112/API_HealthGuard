@@ -12,11 +12,11 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="bg-accent/15 px-4 py-2 text-center text-sm text-accent">
+      <div className="hg-enter-item bg-accent/15 px-4 py-2 text-center text-sm text-accent">
         Zero-input testing is live — upload a spec, every endpoint is marked working or broken.
       </div>
 
-      <header className="sticky top-0 z-20 border-b border-line/80 bg-ink/80 backdrop-blur-md">
+      <header className="hg-fade-in sticky top-0 z-20 border-b border-line/80 bg-ink/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 font-display text-base font-semibold tracking-tight" aria-label="API Vitals">
             <LogoIcon className="h-7 w-7" />
@@ -71,7 +71,7 @@ export default function Home() {
         <section className="relative mx-auto max-w-3xl px-6 pb-12 pt-16 text-center sm:pt-24">
           <Link
             href={token ? "/projects" : "/signup"}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-xs text-text-muted hover:border-accent/40 hover:text-text"
+            className="hg-enter-item hg-d2 mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-xs text-text-muted hover:border-accent/40 hover:text-text"
           >
             <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#0b1220]">
               New
@@ -80,15 +80,15 @@ export default function Home() {
             <Arrow className="opacity-70" />
           </Link>
 
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-text sm:text-6xl sm:leading-[1.08]">
+          <h1 className="hg-enter-item hg-d3 font-display text-4xl font-semibold tracking-tight text-text sm:text-6xl sm:leading-[1.08]">
             See what&apos;s broken in your API
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
+          <p className="hg-enter-item hg-d4 mx-auto mt-5 max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
             Upload an OpenAPI spec and run. Working means the status matches the spec — 404 and
             401 count when they should. Then send real data, like Postman, on any endpoint.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="hg-enter-item hg-d5 mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={token ? "/projects" : "/signup"}
               className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-[#0b1220] hover:bg-accent-hover"
@@ -102,7 +102,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="product" className="relative mx-auto max-w-5xl scroll-mt-24 px-6 pb-24">
+        <section id="product" className="hg-enter-item hg-d6 relative mx-auto max-w-5xl scroll-mt-24 px-6 pb-24">
           <ProductPreview />
         </section>
 
@@ -112,22 +112,25 @@ export default function Home() {
               kicker="01"
               title="Upload a spec"
               body="OpenAPI or Postman. We parse every route, documented status, and whether auth is required."
+              delay="hg-d2"
             />
             <Feature
               kicker="02"
               title="Zero-input run"
               body="A throwaway account, random UUIDs, empty bodies. 5xx is broken. 404 on a missing id is working."
+              delay="hg-d3"
             />
             <Feature
               kicker="03"
               title="Try with real data"
               body="Open any endpoint like Postman: path params, headers, JSON body, bearer token, and the live response."
+              delay="hg-d4"
             />
           </div>
         </section>
 
         <section id="try" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-20">
-          <div className="rounded-2xl border border-line bg-panel px-8 py-12 text-center sm:px-16">
+          <div className="hg-enter-item hg-d5 rounded-2xl border border-line bg-panel px-8 py-12 text-center sm:px-16">
             <h2 className="font-display text-3xl font-semibold tracking-tight">
               From “is it up?” to “does create work?”
             </h2>
@@ -170,7 +173,7 @@ function Arrow({ className = "" }: { className?: string }) {
 function Ribbon() {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-24 -z-10 h-[520px] overflow-hidden" aria-hidden>
-      <svg className="h-full w-[140%] max-w-none -translate-x-[12%]" viewBox="0 0 1400 520" fill="none">
+      <svg className="hg-ribbon-float h-full w-[140%] max-w-none" viewBox="0 0 1400 520" fill="none">
         <defs>
           <linearGradient id="ribbon" x1="0" y1="0" x2="1400" y2="200">
             <stop offset="0%" stopColor="#5b8def" stopOpacity="0.15" />
@@ -201,9 +204,19 @@ function Ribbon() {
   );
 }
 
-function Feature({ kicker, title, body }: { kicker: string; title: string; body: string }) {
+function Feature({
+  kicker,
+  title,
+  body,
+  delay = "",
+}: {
+  kicker: string;
+  title: string;
+  body: string;
+  delay?: string;
+}) {
   return (
-    <div>
+    <div className={`hg-enter-item ${delay}`}>
       <div className="font-mono text-xs text-accent">{kicker}</div>
       <h3 className="mt-2 font-display text-lg font-semibold">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-text-muted">{body}</p>

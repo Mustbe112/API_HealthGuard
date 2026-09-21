@@ -7,12 +7,23 @@ import { healthFromOutcome } from "@/lib/workbench-health";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { MethodBadge } from "@/components/MethodBadge";
 import { PageHeader } from "@/components/workbench/PageHeader";
+import { PageLoader, ProbeLoader } from "@/components/LoadingState";
 
 export default function EndpointsPage() {
-  const { project, selectedRun, openConnect } = useProject();
+  const { project, selectedRun, openConnect, isProbing, probePhase, uploadMsg } = useProject();
   const endpoints = project?.endpoints ?? [];
 
-  if (!project) return <p className="text-sm text-text-muted">Loading…</p>;
+  if (!project) return <PageLoader label="Opening endpoints…" />;
+  if (isProbing) {
+    return (
+      <ProbeLoader
+        title={probePhase === "discover" ? "Discovering your API" : "Running health check"}
+        message={uploadMsg}
+        baseUrl={project.baseUrl}
+        phase={probePhase}
+      />
+    );
+  }
   if (endpoints.length === 0) {
     return (
       <div className="rounded-md border border-line bg-surface p-8 text-center">

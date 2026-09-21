@@ -39,6 +39,8 @@ type ProjectContextValue = {
   discovering: boolean;
   uploading: boolean;
   running: boolean;
+  isProbing: boolean;
+  probePhase: "discover" | "run";
   dryRun: boolean;
   setDryRun: (v: boolean) => void;
   runs: TestRun[];
@@ -280,6 +282,20 @@ export function ProjectProvider({
     detectedAt: r.createdAt,
   }));
 
+  const runningNow = running || selectedRun?.status === "RUNNING";
+  const hasRunResults = Boolean(selectedRun && (selectedRun.results?.length ?? 0) > 0);
+  const isProbing =
+    discovering ||
+    (runningNow && !hasRunResults) ||
+    (project !== null &&
+      (project.endpoints?.length ?? 0) === 0 &&
+      !uploadMsg &&
+      !error);
+  const probePhase: "discover" | "run" =
+    discovering || (project !== null && (project.endpoints?.length ?? 0) === 0)
+      ? "discover"
+      : "run";
+
   const value: ProjectContextValue = {
     projectId,
     project,
@@ -287,7 +303,9 @@ export function ProjectProvider({
     uploadMsg,
     discovering,
     uploading,
-    running: running || selectedRun?.status === "RUNNING",
+    running: runningNow,
+    isProbing,
+    probePhase,
     dryRun,
     setDryRun,
     runs,

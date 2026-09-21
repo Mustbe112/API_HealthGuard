@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ProjectProvider } from "@/lib/project-context";
 import { WorkbenchShell } from "@/components/workbench/WorkbenchShell";
+import { PageLoader } from "@/components/LoadingState";
 
 export default function ProjectLayout({
   children,
@@ -23,8 +24,8 @@ export default function ProjectLayout({
 
   if (!isReady || !token) {
     return (
-      <div className="workbench flex min-h-screen items-center justify-center text-sm text-text-muted">
-        Loading…
+      <div className="workbench min-h-screen bg-bg">
+        <PageLoader label="Loading workbench…" />
       </div>
     );
   }

@@ -3,12 +3,24 @@
 import { useProject } from "@/lib/project-context";
 import { ApiMap } from "@/components/workbench/ApiMap";
 import { PageHeader } from "@/components/workbench/PageHeader";
+import { PageLoader, ProbeLoader } from "@/components/LoadingState";
 
 export default function ApiMapPage() {
-  const { project, selectedRun, openConnect } = useProject();
+  const { project, selectedRun, openConnect, isProbing, probePhase, uploadMsg } = useProject();
   const endpoints = project?.endpoints ?? [];
 
-  if (!project) return <p className="text-sm text-text-muted">Loading…</p>;
+  if (!project) return <PageLoader label="Opening API map…" />;
+
+  if (isProbing) {
+    return (
+      <ProbeLoader
+        title={probePhase === "discover" ? "Discovering your API" : "Running health check"}
+        message={uploadMsg}
+        baseUrl={project.baseUrl}
+        phase={probePhase}
+      />
+    );
+  }
 
   if (endpoints.length === 0) {
     return (

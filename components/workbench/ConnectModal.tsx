@@ -46,9 +46,9 @@ export function ConnectModal({
             type="button"
             disabled={busy || !file}
             onClick={() => file && onContinue(file)}
-            className="rounded bg-run px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded bg-run px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
           >
-            Continue
+            {busy ? "Importing…" : "Continue"}
           </button>
         </footer>
       </div>
