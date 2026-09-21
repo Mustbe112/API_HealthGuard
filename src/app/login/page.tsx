@@ -35,7 +35,7 @@ export default function LoginPage() {
     <div className="workbench flex min-h-screen flex-col bg-bg">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-line bg-surface px-6">
         <BrandMark />
-        <ThemeToggle />
+            <ThemeToggle showLabel />
       </header>
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">

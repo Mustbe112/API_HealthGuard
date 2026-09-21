@@ -9,11 +9,13 @@ import { HealthBanner } from "@/components/workbench/HealthBanner";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { MethodBadge } from "@/components/MethodBadge";
 import { LatencyBar } from "@/components/LatencyBar";
+import { HealthCharts } from "@/components/workbench/HealthCharts";
+import { BackButton } from "@/components/BackButton";
 
 type Filter = "all" | "working" | "login" | "broken";
 
 export default function DashboardPage() {
-  const { project, selectedRun, summary, openConnect, error, uploadMsg, addVariable, startRun, running } =
+  const { project, selectedRun, summary, openConnect, error, uploadMsg, addVariable, startRun, running, runs } =
     useProject();
   const [filter, setFilter] = useState<Filter>("all");
   const results = rollupResultsByEndpoint(selectedRun?.results ?? []);
@@ -52,6 +54,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
+        <BackButton href={`/projects/${project.id}/endpoints`} label="Endpoints" />
         <h1 className="text-xl font-semibold text-text">API health</h1>
         <p className="text-sm text-text-muted">{project.baseUrl}</p>
       </div>
@@ -66,6 +69,18 @@ export default function DashboardPage() {
           await startRun();
         }}
       />
+      {summary.hasRun && (
+        <HealthCharts
+          counts={{
+            workingCount: summary.workingCount,
+            brokenCount: summary.brokenCount,
+            skippedCount: summary.skippedCount,
+            manualCount: summary.manualCount,
+          }}
+          results={results}
+          runs={runs}
+        />
+      )}
       <div className="flex gap-1">
         {(["all", "working", "login", "broken"] as const).map((f) => (
           <button

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useProject } from "@/lib/project-context";
 import { MethodBadge } from "@/components/MethodBadge";
 import { formatLatency } from "@/lib/workbench-health";
+import { BackButton } from "@/components/BackButton";
 
 export default function IncidentDetailPage({
   params,
@@ -28,6 +29,7 @@ export default function IncidentDetailPage({
 
   return (
     <div className="max-w-lg space-y-4">
+      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
       <h1 className="text-xl font-semibold text-text">Incident</h1>
       <div className="rounded-md border border-line bg-surface p-4 text-sm">
         <Row label="Endpoint">

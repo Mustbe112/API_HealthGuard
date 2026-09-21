@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useProject } from "@/lib/project-context";
 import { MethodBadge } from "@/components/MethodBadge";
 import { formatLatency } from "@/lib/workbench-health";
+import { BackButton } from "@/components/BackButton";
 
 export default function IncidentsPage() {
   const { incidents, projectId } = useProject();
 
   return (
     <div>
+      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
       <h1 className="mb-4 text-xl font-semibold text-text">Incidents</h1>
       {incidents.length === 0 ? (
         <p className="text-sm text-text-muted">No broken probes in the current run.</p>
