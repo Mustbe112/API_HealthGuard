@@ -1,0 +1,1151 @@
+openapi: 3.0.3
+info:
+  title: API HealthGuard
+  description: |
+    Backend for API HealthGuard. Sign up, create a project with a locked API
+    Base URL, discover or upload endpoints, then run zero-input health checks.
+    Scoring stays rule-based; Explain is optional and needs `GROQ_API_KEY`.
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:4000
+    description: Local development
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Projects
+  - name: Endpoints
+  - name: Test runs
+  - name: Variables
+  - name: Explain
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness check
+      security: []
+      operationId: getHealth
+      responses:
+        "200":
+          description: Process is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: Create an account
+      security: []
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          description: Email already in use (message is deliberately vague)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                error: Could not create account with these details
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      security: []
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          description: Email missing or password wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                error: Invalid email or password
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user
+      operationId: me
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Token valid but user no longer exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List owned projects
+      operationId: listProjects
+      responses:
+        "200":
+          description: Newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [projects]
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Projects]
+      summary: Create a project
+      description: Base URL is locked after create. Use a new project to monitor a different API.
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectRequest"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [project]
+                properties:
+                  project:
+                    $ref: "#/components/schemas/Project"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /projects/{projectId}:
+    parameters:
+      - $ref: "#/components/parameters/projectId"
+    get:
+      tags: [Projects]
+      summary: Get a project and its endpoints
+      operationId: getProject
+      responses:
+        "200":
+          description: Project with endpoints
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [project]
+                properties:
+                  project:
+                    $ref: "#/components/schemas/ProjectWithEndpoints"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+    patch:
+      tags: [Projects]
+      summary: Rename a project
+      description: Changing baseUrl always returns 409. Create a new project instead.
+      operationId: updateProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectRequest"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [project]
+                properties:
+                  project:
+                    $ref: "#/components/schemas/ProjectWithEndpoints"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+        "409":
+          description: Base URL is locked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                error: API Base URL is locked after the project is created. Create a new project to monitor a different API.
+    delete:
+      tags: [Projects]
+      summary: Delete a project
+      description: Removes the project and its endpoints, runs, and variables.
+      operationId: deleteProject
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+
+  /projects/{projectId}/upload:
+    post:
+      tags: [Endpoints]
+      summary: Replace endpoints from an OpenAPI or Postman file
+      description: |
+        Multipart field must be named `file` (max 5MB). Spec `servers[]` does
+        not change the project Base URL. Existing endpoints for the project
+        are replaced.
+      operationId: uploadSpec
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Endpoints replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadSpecResponse"
+        "400":
+          description: Missing file or multer error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+        "422":
+          description: Unrecognized, unreadable, or empty spec
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /projects/{projectId}/discover:
+    post:
+      tags: [Endpoints]
+      summary: Discover endpoints from the project Base URL
+      description: |
+        Looks for OpenAPI/Swagger on the host, then probes live JSON routes.
+        Replaces stored endpoints when any are found.
+      operationId: discoverSpec
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Discovery finished (count may be 0)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoverResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+        "502":
+          description: Target host unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoverUnreachable"
+
+  /projects/{projectId}/endpoints/{endpointId}:
+    patch:
+      tags: [Endpoints]
+      summary: Update endpoint chain or expected status
+      operationId: updateEndpoint
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/endpointId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEndpointRequest"
+      responses:
+        "200":
+          description: Updated endpoint
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [endpoint]
+                properties:
+                  endpoint:
+                    $ref: "#/components/schemas/Endpoint"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Project or endpoint not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /projects/{projectId}/endpoints/{endpointId}/try:
+    post:
+      tags: [Endpoints]
+      summary: Send a real request to one endpoint
+      description: Request stays on the project's Base URL origin.
+      operationId: tryEndpoint
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/endpointId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TryEndpointRequest"
+      responses:
+        "200":
+          description: Live response from the target API
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [result]
+                properties:
+                  result:
+                    $ref: "#/components/schemas/ManualTryResult"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Project or endpoint not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /projects/{projectId}/run:
+    post:
+      tags: [Test runs]
+      summary: Start a zero-input health check
+      operationId: triggerRun
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunOptions"
+      responses:
+        "202":
+          description: Run accepted (may already be finished when the body is returned)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [testRun]
+                properties:
+                  testRun:
+                    $ref: "#/components/schemas/TestRunDetail"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+
+  /projects/{projectId}/runs:
+    get:
+      tags: [Test runs]
+      summary: List health-check runs
+      operationId: listRuns
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Newest first, with rolled-up outcome counts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [testRuns]
+                properties:
+                  testRuns:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TestRunSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+
+  /projects/{projectId}/runs/{runId}:
+    get:
+      tags: [Test runs]
+      summary: Get one run and its probe results
+      operationId: getRun
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/runId"
+      responses:
+        "200":
+          description: Run with results
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [testRun]
+                properties:
+                  testRun:
+                    $ref: "#/components/schemas/TestRunDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Project or run not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /projects/{projectId}/explain:
+    post:
+      tags: [Explain]
+      summary: Plain-language summary of a stored run
+      description: Does not re-score. Requires GROQ_API_KEY on the server.
+      operationId: explainRun
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExplainRequest"
+      responses:
+        "200":
+          description: Explanation text
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [explanation]
+                properties:
+                  explanation:
+                    type: string
+        "400":
+          description: Validation error, no run yet, or no result for that endpoint
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+        "503":
+          description: Groq key not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /projects/{projectId}/variables:
+    get:
+      tags: [Variables]
+      summary: List project env vars (secrets masked)
+      operationId: listProjectVariables
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Keys only for secrets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VariablesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+    post:
+      tags: [Variables]
+      summary: Create or replace a project env var
+      description: Response never echoes the submitted value.
+      operationId: setProjectVariable
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetVariableRequest"
+      responses:
+        "200":
+          description: Full masked list after upsert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VariablesResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+
+  /projects/{projectId}/variables/{key}:
+    delete:
+      tags: [Variables]
+      summary: Delete a project env var
+      operationId: deleteProjectVariable
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+            example: API_TOKEN
+      responses:
+        "200":
+          description: Remaining masked variables
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VariablesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ProjectNotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT from signup or login. Required on every /projects route and GET /auth/me.
+
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    endpointId:
+      name: endpointId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    runId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Missing, malformed, or expired Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+          examples:
+            missing:
+              value:
+                error: Missing or malformed Authorization header
+            invalid:
+              value:
+                error: Invalid or expired token
+    ProjectNotFound:
+      description: No project with this id owned by the caller
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+          example:
+            error: Project not found
+    ValidationError:
+      description: Zod validation failed (error is a flatten object, not a string)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationErrorBody"
+
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    Credentials:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    User:
+      type: object
+      required: [id, email, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthSession:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+          description: "JWT for Authorization Bearer token"
+
+    CreateProjectRequest:
+      type: object
+      required: [name, baseUrl]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        baseUrl:
+          type: string
+          format: uri
+          example: http://localhost:5000
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        baseUrl:
+          type: string
+          format: uri
+          description: Accepted by the schema but always rejected with 409.
+
+    Project:
+      type: object
+      required: [id, name, baseUrl, ownerId, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        baseUrl:
+          type: string
+          format: uri
+        ownerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProjectWithEndpoints:
+      allOf:
+        - $ref: "#/components/schemas/Project"
+        - type: object
+          required: [endpoints]
+          properties:
+            endpoints:
+              type: array
+              items:
+                $ref: "#/components/schemas/Endpoint"
+
+    HttpMethod:
+      type: string
+      enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]
+
+    Endpoint:
+      type: object
+      required:
+        - id
+        - projectId
+        - name
+        - method
+        - path
+        - expectedStatus
+        - dependsOnId
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        method:
+          $ref: "#/components/schemas/HttpMethod"
+        path:
+          type: string
+          description: Path relative to the project Base URL
+          example: /users/{id}
+        expectedStatus:
+          type: integer
+          default: 200
+        documentedStatuses:
+          type: array
+          items:
+            type: integer
+          nullable: true
+        requiresAuth:
+          type: boolean
+        requestSchema:
+          description: JSON Schema for the request body, if known
+        responseSchema:
+          description: JSON Schema for the response body, if known
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        dependsOnId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateEndpointRequest:
+      type: object
+      properties:
+        dependsOnId:
+          type: string
+          format: uuid
+          nullable: true
+        expectedStatus:
+          type: integer
+
+    UploadSpecResponse:
+      type: object
+      required: [format, count, endpoints, serverUrl]
+      properties:
+        format:
+          type: string
+          enum: [openapi, postman]
+        count:
+          type: integer
+        endpoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/Endpoint"
+        serverUrl:
+          type: string
+          description: Always the project's locked Base URL, not the spec servers list
+
+    DiscoverResponse:
+      type: object
+      required: [source, count, endpoints]
+      properties:
+        source:
+          type: string
+          enum: [openapi, postman, probe]
+        count:
+          type: integer
+        specUrl:
+          type: string
+        endpoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/Endpoint"
+        error:
+          type: string
+          description: Present when the host was reachable but no routes were found
+
+    DiscoverUnreachable:
+      type: object
+      required: [error, count, source]
+      properties:
+        error:
+          type: string
+        count:
+          type: integer
+          enum: [0]
+        source:
+          type: string
+          enum: [none]
+
+    TryEndpointRequest:
+      type: object
+      properties:
+        pathParams:
+          type: object
+          additionalProperties:
+            type: string
+        query:
+          type: object
+          additionalProperties:
+            type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          type: string
+          description: Raw body string; sent only for POST, PUT, and PATCH
+        bearerToken:
+          type: string
+
+    RequestSnapshot:
+      type: object
+      required: [url, method, headers]
+      properties:
+        url:
+          type: string
+        method:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          type: string
+
+    ManualTryResult:
+      type: object
+      required:
+        - statusCode
+        - responseTimeMs
+        - responseBody
+        - responseHeaders
+        - errorMessage
+        - request
+      properties:
+        statusCode:
+          type: integer
+          nullable: true
+        responseTimeMs:
+          type: integer
+          nullable: true
+        responseBody: {}
+        responseHeaders:
+          type: object
+          additionalProperties:
+            type: string
+        errorMessage:
+          type: string
+          nullable: true
+        request:
+          $ref: "#/components/schemas/RequestSnapshot"
+
+    RunOptions:
+      type: object
+      properties:
+        dryRun:
+          type: boolean
+          default: false
+
+    TestRunStatus:
+      type: string
+      enum: [PENDING, RUNNING, COMPLETED, FAILED]
+
+    OutcomeCounts:
+      type: object
+      required: [workingCount, brokenCount, skippedCount, manualCount]
+      properties:
+        workingCount:
+          type: integer
+        brokenCount:
+          type: integer
+        skippedCount:
+          type: integer
+        manualCount:
+          type: integer
+          description: 401/403 — route is up but needs a real login
+
+    TestRun:
+      type: object
+      required: [id, projectId, status, dryRun, startedAt, finishedAt, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/TestRunStatus"
+        dryRun:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    TestRunSummary:
+      allOf:
+        - $ref: "#/components/schemas/TestRun"
+        - $ref: "#/components/schemas/OutcomeCounts"
+
+    ProbeMeta:
+      type: object
+      properties:
+        sent:
+          type: string
+        expected:
+          type: array
+          items:
+            type: integer
+        proves:
+          type: string
+        caution:
+          type: string
+        request:
+          $ref: "#/components/schemas/RequestSnapshot"
+
+    TestResult:
+      type: object
+      required:
+        - id
+        - testRunId
+        - endpointId
+        - statusCode
+        - responseTimeMs
+        - passed
+        - errorMessage
+        - createdAt
+        - endpoint
+      properties:
+        id:
+          type: string
+          format: uuid
+        testRunId:
+          type: string
+          format: uuid
+        endpointId:
+          type: string
+          format: uuid
+        statusCode:
+          type: integer
+          nullable: true
+        responseTimeMs:
+          type: integer
+          nullable: true
+        passed:
+          type: boolean
+        errorMessage:
+          type: string
+          nullable: true
+        responseBody: {}
+        probe:
+          $ref: "#/components/schemas/ProbeMeta"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        endpoint:
+          $ref: "#/components/schemas/Endpoint"
+
+    TestRunDetail:
+      allOf:
+        - $ref: "#/components/schemas/TestRunSummary"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/TestResult"
+
+    ExplainRequest:
+      type: object
+      properties:
+        runId:
+          type: string
+          format: uuid
+          description: Defaults to the latest completed or failed run
+        endpointId:
+          type: string
+          format: uuid
+          description: Explain one endpoint instead of the whole run
+
+    SetVariableRequest:
+      type: object
+      required: [key, value]
+      properties:
+        key:
+          type: string
+          minLength: 1
+          pattern: "^[A-Za-z_][A-Za-z0-9_]*$"
+          example: API_TOKEN
+        value:
+          type: string
+          minLength: 1
+        isSecret:
+          type: boolean
+          default: true
+
+    EnvVariable:
+      type: object
+      required: [id, key, isSecret, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+        isSecret:
+          type: boolean
+        value:
+          type: string
+          description: Masked bullets when secret; omitted for non-secrets
+        updatedAt:
+          type: string
+          format: date-time
+
+    VariablesResponse:
+      type: object
+      required: [variables]
+      properties:
+        variables:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnvVariable"
+
+    ErrorMessage:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    ZodFlatten:
+      type: object
+      properties:
+        formErrors:
+          type: array
+          items:
+            type: string
+        fieldErrors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    ValidationErrorBody:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ZodFlatten"
+
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          oneOf:
+            - type: string
+            - $ref: "#/components/schemas/ZodFlatten"

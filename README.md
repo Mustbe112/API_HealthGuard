@@ -17,26 +17,57 @@ One repo, one `package.json`. The Next.js UI (`src/app`, `:3000`) and Express AP
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 20+ (includes `npm`)
+- **Node.js 20.9+** (this repo will not run on Node 18). Check with `node -v`.
+  - Install: [nodejs.org](https://nodejs.org) → LTS 20, **or** `nvm install 20 && nvm use 20`
 - A **PostgreSQL** database (this project is set up for [Supabase](https://supabase.com/))
 - Git
 
 You do **not** install Prisma globally. `npm install` already pulls `prisma` and `@prisma/client`.
 
+## Classmate setup (copy this)
+
+The `.env` file is **not** enough by itself. Dependencies are not in Git. Everyone must use **Node 20** and run setup once.
+
+```bash
+git clone <this-repo-url>
+cd API_HealthGuard
+
+# If node -v is not v20.x:
+#   nvm install 20 && nvm use 20
+# or install Node 20 LTS from https://nodejs.org then reopen the terminal.
+
+# Put the shared .env in this folder (same folder as package.json).
+# Or:  cp .env.example .env   and fill DATABASE_URL, DIRECT_URL, JWT_SECRET, ENCRYPTION_KEY
+
+npm run setup
+npm run dev
+```
+
+Then open **http://localhost:3000**.
+
+If `npm run setup` says the Node version is wrong, do **not** keep going with `npm run dev`. Install Node 20 first. Mixing Node 18 / 22 / 24 with this lockfile is what usually breaks `argon2` and Next.js.
+
+If an old install is already broken:
+
+```bash
+rm -rf node_modules .next
+npm run setup
+npm run dev
+```
+
+Use **npm**, not yarn or pnpm — this repo’s lockfile is `package-lock.json`.
+
 ## Setup (after `git clone`)
 
 ```bash
 git clone <this-repo-url>
-cd Project
-npm install
-cp .env.example .env
+cd API_HealthGuard
+npm run setup
 ```
 
-Edit `.env` (see below). Then:
+`npm run setup` runs `npm install`, `npx prisma generate`, and `npx prisma migrate deploy`. Then:
 
 ```bash
-npx prisma generate
-npx prisma migrate dev
 npm run dev
 ```
 
@@ -93,6 +124,7 @@ Discovery **GET/OPTIONS** first; extra REST methods on a JSON collection use an 
 
 | Command | What it does |
 | ------- | ------------ |
+| `npm run setup` | Check Node 20, install packages, generate Prisma, apply migrations |
 | `npm run dev` | Backend + frontend together |
 | `npm run dev:backend` | Express on `:4000` |
 | `npm run dev:frontend` | Next.js on `:3000` |
@@ -118,7 +150,7 @@ prisma/                     Schema + migrations
 
 ## Course / sharing notes
 
-- Classmates only need **Node**, **npm install**, **`.env`**, **`npx prisma generate`**, and **`npx prisma migrate dev`**.
+- Classmates need **Node 20**, a **`.env`** in the repo root, then **`npm run setup`** and **`npm run dev`**.
 - Point the project base URL at **their** API (`http://localhost:5000`, etc.). This tester’s UI is `:3000` and its own API is `:4000`.
 - If the backend cannot reach “localhost”, they may be targeting the Next.js app instead of the API under test.
 - To monitor a different API, create a **new project**. Do not retarget an existing one.

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.middleware";
-import { createProject, listProjects, getProject, updateProject, updateEndpoint } from "../controllers/project.controller";
+import { createProject, listProjects, getProject, updateProject, updateEndpoint, deleteProject } from "../controllers/project.controller";
 import { uploadMiddleware, uploadSpec } from "../controllers/upload.controller";
 import { discoverSpec } from "../controllers/discover.controller";
 import { triggerRun, getRun, listRuns } from "../controllers/testRun.controller";
@@ -20,6 +20,7 @@ router.post("/", createProject);
 router.get("/", listProjects);
 router.get("/:projectId", getProject);
 router.patch("/:projectId", updateProject);
+router.delete("/:projectId", deleteProject);
 router.post("/:projectId/upload", uploadMiddleware, uploadSpec);
 router.post("/:projectId/discover", discoverSpec);
 router.patch("/:projectId/endpoints/:endpointId", updateEndpoint);

@@ -137,11 +137,11 @@ export async function explainHealthCheck(opts: {
   };
 
   const system = [
-    "You explain API health-check results for a non-expert.",
-    "Use only these labels: Working, Needs a login, Broken.",
-    "Working = the route answered as expected. Needs a login = 401/403, the route is up. Broken = 5xx or no response.",
-    "Write 3-6 short sentences, then up to 3 next steps as bullets.",
-    "Do not invent routes. Do not ask for or repeat secrets. Do not mention Groq or that you are an AI.",
+    "You explain API health-check results like a helpful teammate talking to a human.",
+    "Write 1 or 2 short paragraphs in plain English. No headings, bullets, numbered lists, or markdown.",
+    "Working means the route answered as expected. Needs a login means 401/403 — the route is up. Broken means 5xx or no response.",
+    "Say what looks fine, what needs a real login, and what is actually broken. If something is broken, mention one clear next step in the same paragraph.",
+    "Keep it under 90 words. Do not invent routes. Do not ask for or repeat secrets. Do not mention Groq or that you are an AI.",
   ].join(" ");
 
   const user = opts.endpointId
@@ -166,6 +166,20 @@ function explanationFromMessage(message?: {
   return "";
 }
 
+function shortenExplanation(text: string): string {
+  const cleaned = text
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*•]\s+/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  const paragraphs = cleaned
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  return paragraphs.join("\n\n");
+}
+
 async function callGroq(system: string, user: string): Promise<string> {
   const models = [env.groqModel, ...MODEL_FALLBACKS.filter((m) => m !== env.groqModel)];
   let lastError = "Could not reach Groq.";
@@ -182,8 +196,8 @@ async function callGroq(system: string, user: string): Promise<string> {
         },
         body: JSON.stringify({
           model,
-          temperature: 0.3,
-          max_tokens: 1200,
+          temperature: 0.4,
+          max_tokens: 280,
           messages: [
             { role: "system", content: system },
             { role: "user", content: user },
@@ -205,7 +219,7 @@ async function callGroq(system: string, user: string): Promise<string> {
       if (res.ok) {
         const text = explanationFromMessage(body?.choices?.[0]?.message);
         if (!text) throw new ExplainFailedError("Groq returned an empty explanation.", 502);
-        return text;
+        return shortenExplanation(text);
       }
 
       lastError = body?.error?.message ?? `Groq returned ${res.status}`;

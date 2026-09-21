@@ -111,8 +111,20 @@ async function updateEndpointHandler(req: Request, res: Response) {
   return res.status(200).json({ endpoint: updated });
 }
 
+async function deleteProjectHandler(req: Request, res: Response) {
+  const { projectId } = req.params;
+  const existing = await prisma.project.findFirst({
+    where: { id: projectId, ownerId: req.user!.userId },
+  });
+  if (!existing) return res.status(404).json({ error: "Project not found" });
+
+  await prisma.project.delete({ where: { id: projectId } });
+  return res.status(200).json({ ok: true });
+}
+
 export const createProject = asyncHandler(createProjectHandler);
 export const listProjects = asyncHandler(listProjectsHandler);
 export const getProject = asyncHandler(getProjectHandler);
 export const updateProject = asyncHandler(updateProjectHandler);
 export const updateEndpoint = asyncHandler(updateEndpointHandler);
+export const deleteProject = asyncHandler(deleteProjectHandler);
