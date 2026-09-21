@@ -72,6 +72,9 @@ export const api = {
   getProject: (token: string, projectId: string) =>
     request<{ project: Project }>(`/projects/${projectId}`, { token }),
 
+  deleteProject: (token: string, projectId: string) =>
+    request<{ ok: boolean }>(`/projects/${projectId}`, { method: "DELETE", token }),
+
   updateProject: (token: string, projectId: string, data: { name?: string }) =>
     request<{ project: Project }>(`/projects/${projectId}`, {
       method: "PATCH",

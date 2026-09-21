@@ -10,6 +10,7 @@ import { EndpointTester } from "@/components/EndpointTester";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { ExplainPanel } from "@/components/workbench/ExplainPanel";
 import { MethodBadge } from "@/components/MethodBadge";
+import { BackButton } from "@/components/BackButton";
 
 export default function EndpointDetailPage({
   params,
@@ -38,6 +39,7 @@ export default function EndpointDetailPage({
 
   return (
     <div className="flex flex-col gap-4">
+      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
       <div className="flex flex-wrap items-center gap-3">
         <MethodBadge method={endpoint.method} />
         <h1 className="font-mono text-xl font-semibold text-text">{endpoint.path}</h1>

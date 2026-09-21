@@ -2,7 +2,12 @@
   "name": "api-management",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "dev": "concurrently -n backend,frontend -c yellow,cyan \"npm:dev:backend\" \"npm:dev:frontend\"",
     "dev:backend": "tsx watch backend/src/index.ts",
     "dev:frontend": "next dev",
