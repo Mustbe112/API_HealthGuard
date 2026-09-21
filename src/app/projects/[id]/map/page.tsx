@@ -2,7 +2,7 @@
 
 import { useProject } from "@/lib/project-context";
 import { ApiMap } from "@/components/workbench/ApiMap";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 export default function ApiMapPage() {
   const { project, selectedRun, openConnect } = useProject();
@@ -28,15 +28,11 @@ export default function ApiMapPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <BackButton href={`/projects/${project.id}/endpoints`} label="Endpoints" />
-        <h1 className="text-xl font-semibold text-text">API map</h1>
-        <p className="text-sm text-text-muted">
-          How routes hang off this host. Color is from the last health check. Click a method to open
-          it.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        title="API map"
+        subtitle="Color is from the last health check. Click a method to open it."
+      />
       <ApiMap
         projectId={project.id}
         baseUrl={project.baseUrl}

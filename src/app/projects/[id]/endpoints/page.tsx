@@ -6,6 +6,7 @@ import { resultForEndpoint, useProject } from "@/lib/project-context";
 import { healthFromOutcome } from "@/lib/workbench-health";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { MethodBadge } from "@/components/MethodBadge";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 export default function EndpointsPage() {
   const { project, selectedRun, openConnect } = useProject();
@@ -30,21 +31,23 @@ export default function EndpointsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-end justify-between gap-3">
-        <h1 className="text-xl font-semibold text-text">Endpoints</h1>
-        <Link href={`/projects/${project.id}/map`} className="text-sm text-link hover:underline">
-          View API map
-        </Link>
-      </div>
-      <div className="overflow-x-auto rounded-md border border-line bg-surface">
-        <table className="w-full text-left text-sm">
-          <thead className="text-xs text-text-muted">
-            <tr className="border-b border-line">
-              <th className="px-4 py-2 font-medium">Method</th>
-              <th className="px-4 py-2 font-medium">Path</th>
-              <th className="px-4 py-2 font-medium">Last status</th>
-              <th className="px-4 py-2 font-medium">Health</th>
+    <div>
+      <PageHeader
+        title="Endpoints"
+        actions={
+          <Link href={`/projects/${project.id}/map`} className="text-sm text-link hover:underline">
+            View API map
+          </Link>
+        }
+      />
+      <div className="wb-scroll">
+        <table className="wb-table">
+          <thead>
+            <tr>
+              <th className="w-20">Method</th>
+              <th>Path</th>
+              <th className="w-28">Last status</th>
+              <th className="w-32">Health</th>
             </tr>
           </thead>
           <tbody>
@@ -52,17 +55,22 @@ export default function EndpointsPage() {
               const result = resultForEndpoint(selectedRun, ep.id);
               const health = result ? healthFromOutcome(classifyOutcome(result)) : null;
               return (
-                <tr key={ep.id} className="border-b border-line last:border-0 hover:bg-bg">
-                  <td className="px-4 py-2">
+                <tr key={ep.id}>
+                  <td>
                     <MethodBadge method={ep.method} />
                   </td>
-                  <td className="px-4 py-2">
-                    <Link href={`/projects/${project.id}/endpoints/${ep.id}`} className="font-mono text-xs hover:text-link">
+                  <td className="truncate">
+                    <Link
+                      href={`/projects/${project.id}/endpoints/${ep.id}`}
+                      className="font-mono text-xs hover:text-link"
+                    >
                       {ep.path}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 font-mono text-xs">{result?.statusCode ?? "—"}</td>
-                  <td className="px-4 py-2">{health ? <HealthBadge status={health} /> : <span className="text-xs text-text-muted">—</span>}</td>
+                  <td className="font-mono text-xs">{result?.statusCode ?? "—"}</td>
+                  <td>
+                    {health ? <HealthBadge status={health} /> : <span className="text-xs text-text-muted">—</span>}
+                  </td>
                 </tr>
               );
             })}

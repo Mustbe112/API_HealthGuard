@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useProject } from "@/lib/project-context";
 import { MethodBadge } from "@/components/MethodBadge";
 import { formatLatency } from "@/lib/workbench-health";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 export default function IncidentDetailPage({
   params,
@@ -28,14 +28,16 @@ export default function IncidentDetailPage({
   }
 
   return (
-    <div className="max-w-lg space-y-4">
-      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
-      <h1 className="text-xl font-semibold text-text">Incident</h1>
+    <div className="max-w-lg">
+      <PageHeader backHref={`/projects/${projectId}/incidents`} backLabel="Incidents" title="Incident" />
       <div className="rounded-md border border-line bg-surface p-4 text-sm">
         <Row label="Endpoint">
-          <span className="flex items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2">
             <MethodBadge method={incident.method} />
-            <Link href={`/projects/${projectId}/endpoints/${incident.endpointId}`} className="font-mono text-xs text-link">
+            <Link
+              href={`/projects/${projectId}/endpoints/${incident.endpointId}`}
+              className="truncate font-mono text-xs text-link"
+            >
               {incident.path}
             </Link>
           </span>
@@ -53,8 +55,8 @@ export default function IncidentDetailPage({
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 border-b border-line py-2 last:border-0">
-      <span className="text-text-muted">{label}</span>
-      <span className="text-right text-text">{children}</span>
+      <span className="shrink-0 text-text-muted">{label}</span>
+      <span className="min-w-0 text-right text-text">{children}</span>
     </div>
   );
 }

@@ -12,7 +12,7 @@ const STYLES: Record<HttpMethod, string> = {
 
 export function MethodBadge({ method }: { method: HttpMethod }) {
   return (
-    <span className={`inline-block text-[12px] font-semibold tracking-wide ${STYLES[method]}`}>
+    <span className={`inline-block w-14 shrink-0 text-[11px] font-semibold tracking-wide ${STYLES[method]}`}>
       {method}
     </span>
   );
