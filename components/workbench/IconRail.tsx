@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoIcon } from "@/components/BrandMark";
 
 const ITEMS = [
   { to: "", label: "Dashboard", icon: DashIcon, end: true },
@@ -21,9 +22,10 @@ export function IconRail({ projectId }: { projectId: string }) {
       <Link
         href={base}
         title="API HealthGuard"
-        className="mb-6 flex h-7 w-7 items-center justify-center rounded bg-run text-[10px] font-semibold text-white"
+        aria-label="API HealthGuard"
+        className="mb-6"
       >
-        HG
+        <LogoIcon className="h-7 w-7" />
       </Link>
       <div className="flex flex-1 flex-col gap-1">
         {ITEMS.map((item) => {
