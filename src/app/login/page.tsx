@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/Button";
+import { PasswordInput } from "@/components/PasswordInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ApiError } from "@/lib/api";
 
@@ -61,14 +62,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-text-muted">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded border border-line bg-bg px-3 py-2 text-sm text-text outline-none focus:border-run"
-                placeholder="••••••••"
-              />
+              <PasswordInput required value={password} onChange={setPassword} />
             </div>
 
             {error && <p className="text-xs text-fail">{error}</p>}

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/Button";
+import { PasswordInput } from "@/components/PasswordInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ApiError } from "@/lib/api";
 
@@ -61,14 +62,13 @@ export default function SignupPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-text-muted">Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded border border-line bg-bg px-3 py-2 text-sm text-text outline-none focus:border-run"
+                autoComplete="new-password"
                 placeholder="At least 8 characters"
+                value={password}
+                onChange={setPassword}
               />
             </div>
 
