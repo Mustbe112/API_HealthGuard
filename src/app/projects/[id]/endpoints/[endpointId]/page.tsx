@@ -10,7 +10,7 @@ import { EndpointTester } from "@/components/EndpointTester";
 import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { ExplainPanel } from "@/components/workbench/ExplainPanel";
 import { MethodBadge } from "@/components/MethodBadge";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 export default function EndpointDetailPage({
   params,
@@ -38,19 +38,24 @@ export default function EndpointDetailPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <BackButton href={`/projects/${projectId}/endpoints`} label="Endpoints" />
-      <div className="flex flex-wrap items-center gap-3">
-        <MethodBadge method={endpoint.method} />
-        <h1 className="font-mono text-xl font-semibold text-text">{endpoint.path}</h1>
-        <HealthBadge status={health} />
-      </div>
-      <div className="flex flex-wrap gap-6 rounded-md border border-line bg-surface px-4 py-3 text-sm">
+    <div>
+      <PageHeader
+        backHref={`/projects/${projectId}/endpoints`}
+        backLabel="Endpoints"
+        title={
+          <span className="flex min-w-0 items-center gap-3">
+            <MethodBadge method={endpoint.method} />
+            <span className="truncate font-mono">{endpoint.path}</span>
+            <HealthBadge status={health} />
+          </span>
+        }
+      />
+      <div className="grid grid-cols-3 gap-4 rounded-md border border-line bg-surface px-4 py-3 text-sm">
         <Metric label="Expected / actual" value={`${endpoint.expectedStatus} / ${result?.statusCode ?? "—"}`} />
         <Metric label="Avg latency" value={formatLatency(result?.responseTimeMs ?? null)} />
         <Metric label="Probe" value={result?.probe?.sent ?? "—"} />
       </div>
-      <div className="rounded-md border border-line bg-surface">
+      <div className="mt-4 rounded-md border border-line bg-surface">
         <div className="flex gap-4 border-b border-line px-4">
           {(["results", "log", "try"] as const).map((t) => (
             <button
@@ -128,7 +133,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs text-text-muted">{label}</div>
-      <div className="font-medium">{value}</div>
+      <div className="mt-1 min-w-0 truncate text-sm font-medium">{value}</div>
     </div>
   );
 }
