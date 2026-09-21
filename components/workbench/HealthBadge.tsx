@@ -14,7 +14,7 @@ const LABEL: Record<HealthStatus, string> = {
 
 export function HealthBadge({ status }: { status: HealthStatus }) {
   return (
-    <span className={`rounded px-1.5 py-0.5 text-xs font-medium tracking-wide ${TONE[status]}`}>
+    <span className={`inline-flex whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium tracking-wide ${TONE[status]}`}>
       {LABEL[status]}
     </span>
   );

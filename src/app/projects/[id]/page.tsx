@@ -10,7 +10,7 @@ import { HealthBadge } from "@/components/workbench/HealthBadge";
 import { MethodBadge } from "@/components/MethodBadge";
 import { LatencyBar } from "@/components/LatencyBar";
 import { HealthCharts } from "@/components/workbench/HealthCharts";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/workbench/PageHeader";
 
 type Filter = "all" | "working" | "login" | "broken";
 
@@ -52,100 +52,101 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <BackButton href={`/projects/${project.id}/endpoints`} label="Endpoints" />
-        <h1 className="text-xl font-semibold text-text">API health</h1>
-        <p className="text-sm text-text-muted">{project.baseUrl}</p>
-      </div>
-      {error && <p className="text-sm text-unhealthy">{error}</p>}
-      <HealthBanner
-        summary={summary}
-        projectId={project.id}
-        runId={selectedRun?.id}
-        running={running}
-        onSaveTokenAndRecheck={async (tokenValue) => {
-          await addVariable("API_TOKEN", tokenValue, true);
-          await startRun();
-        }}
-      />
-      {summary.hasRun && (
-        <HealthCharts
-          counts={{
-            workingCount: summary.workingCount,
-            brokenCount: summary.brokenCount,
-            skippedCount: summary.skippedCount,
-            manualCount: summary.manualCount,
+    <div>
+      <PageHeader title="API health" subtitle={project.baseUrl} />
+      {error && <p className="mb-4 text-sm text-unhealthy">{error}</p>}
+      <div className="flex flex-col gap-4">
+        <HealthBanner
+          summary={summary}
+          projectId={project.id}
+          runId={selectedRun?.id}
+          running={running}
+          onSaveTokenAndRecheck={async (tokenValue) => {
+            await addVariable("API_TOKEN", tokenValue, true);
+            await startRun();
           }}
-          results={results}
-          runs={runs}
         />
-      )}
-      <div className="flex gap-1">
-        {(["all", "working", "login", "broken"] as const).map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1 text-xs ${
-              filter === f ? "bg-surface text-text" : "text-text-muted hover:text-text"
-            }`}
-          >
-            {f === "all" ? "All" : f === "working" ? "Working" : f === "login" ? "Needs a login" : "Broken"}
-          </button>
-        ))}
-      </div>
-      <div className="overflow-x-auto rounded-md border border-line bg-surface">
-        <table className="w-full text-left text-sm">
-          <thead className="text-xs text-text-muted">
-            <tr className="border-b border-line">
-              <th className="px-4 py-2 font-medium">Method</th>
-              <th className="px-4 py-2 font-medium">Endpoint</th>
-              <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Latency</th>
-              <th className="px-4 py-2 font-medium">Health</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => {
-              const outcome = classifyOutcome(r);
-              const health = healthFromOutcome(outcome);
-              return (
-                <tr key={r.id} className="border-b border-line last:border-0 hover:bg-bg">
-                  <td className="px-4 py-2">
-                    <MethodBadge method={r.endpoint.method} />
-                  </td>
-                  <td className="px-4 py-2">
-                    <Link href={`/projects/${project.id}/endpoints/${r.endpointId}`} className="font-mono text-xs hover:text-link">
-                      {r.endpoint.path}
-                    </Link>
-                  </td>
-                  <td className={`px-4 py-2 font-mono text-xs ${statusClass(r.statusCode)}`}>
-                    {r.statusCode ?? "—"}
-                  </td>
-                  <td className="px-4 py-2">
-                    <LatencyBar
-                      ms={r.responseTimeMs}
-                      maxMs={maxMs}
-                      tone={health === "unhealthy" ? "fail" : health === "healthy" ? "pass" : "pending"}
-                    />
-                  </td>
-                  <td className="px-4 py-2">
-                    <HealthBadge status={health} />
-                    {outcome === "manual" && (
+        {summary.hasRun && (
+          <HealthCharts
+            counts={{
+              workingCount: summary.workingCount,
+              brokenCount: summary.brokenCount,
+              skippedCount: summary.skippedCount,
+              manualCount: summary.manualCount,
+            }}
+            results={results}
+            runs={runs}
+          />
+        )}
+        <div className="flex gap-1">
+          {(["all", "working", "login", "broken"] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`rounded-full px-3 py-1 text-xs ${
+                filter === f ? "bg-surface text-text" : "text-text-muted hover:text-text"
+              }`}
+            >
+              {f === "all" ? "All" : f === "working" ? "Working" : f === "login" ? "Needs a login" : "Broken"}
+            </button>
+          ))}
+        </div>
+        <div className="wb-scroll">
+          <table className="wb-table">
+            <thead>
+              <tr>
+                <th className="w-20">Method</th>
+                <th>Endpoint</th>
+                <th className="w-20">Status</th>
+                <th className="w-40">Latency</th>
+                <th className="w-36">Health</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => {
+                const outcome = classifyOutcome(r);
+                const health = healthFromOutcome(outcome);
+                return (
+                  <tr key={r.id}>
+                    <td>
+                      <MethodBadge method={r.endpoint.method} />
+                    </td>
+                    <td className="truncate">
                       <Link
-                        href={`/projects/${project.id}/endpoints/${r.endpointId}?tab=try`}
-                        className="ml-2 text-[11px] text-link hover:underline"
+                        href={`/projects/${project.id}/endpoints/${r.endpointId}`}
+                        className="font-mono text-xs hover:text-link"
                       >
-                        Open Try
+                        {r.endpoint.path}
                       </Link>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className={`font-mono text-xs ${statusClass(r.statusCode)}`}>
+                      {r.statusCode ?? "—"}
+                    </td>
+                    <td>
+                      <LatencyBar
+                        ms={r.responseTimeMs}
+                        maxMs={maxMs}
+                        tone={health === "unhealthy" ? "fail" : health === "healthy" ? "pass" : "pending"}
+                      />
+                    </td>
+                    <td>
+                      <HealthBadge status={health} />
+                      {outcome === "manual" && (
+                        <Link
+                          href={`/projects/${project.id}/endpoints/${r.endpointId}?tab=try`}
+                          className="ml-2 text-[11px] text-link hover:underline"
+                        >
+                          Open Try
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

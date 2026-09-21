@@ -10,7 +10,7 @@ export function IncidentRail({
   incidents: IncidentRow[];
 }) {
   return (
-    <aside className="hidden w-[280px] shrink-0 overflow-y-auto border-l border-line bg-surface lg:block">
+    <aside className="hidden h-full w-72 shrink-0 overflow-y-auto border-l border-line bg-surface xl:block">
       <div className="border-b border-line px-4 py-3 text-xs font-medium uppercase tracking-wide text-text-muted">
         Incident history
       </div>
