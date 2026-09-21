@@ -9,6 +9,7 @@ import type { Project } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/Button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PageLoader, ProbeLoader, ProjectListSkeleton, Spinner } from "@/components/LoadingState";
 
 export default function ProjectsPage() {
   const { token, user, logout, isReady } = useAuth();
@@ -45,7 +46,6 @@ export default function ProjectsPage() {
       router.push(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to create project");
-    } finally {
       setCreating(false);
     }
   }
@@ -66,7 +66,13 @@ export default function ProjectsPage() {
     }
   }
 
-  if (!isReady || !token) return null;
+  if (!isReady || !token) {
+    return (
+      <div className="workbench min-h-screen bg-bg">
+        <PageLoader label="Loading projects…" />
+      </div>
+    );
+  }
 
   return (
     <div className="workbench min-h-screen bg-bg">
@@ -124,7 +130,14 @@ export default function ProjectsPage() {
               </p>
             </div>
             <Button type="submit" disabled={creating} className="!bg-run !text-white">
-              {creating ? "Creating…" : "Create & discover"}
+              {creating ? (
+                <>
+                  <Spinner className="h-4 w-4" />
+                  Connecting…
+                </>
+              ) : (
+                "Create & discover"
+              )}
             </Button>
           </form>
         )}
@@ -132,7 +145,7 @@ export default function ProjectsPage() {
         {error && <p className="mb-4 text-sm text-fail">{error}</p>}
 
         {projects === null ? (
-          <p className="text-sm text-text-muted">Loading…</p>
+          <ProjectListSkeleton />
         ) : projects.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line p-10 text-center text-sm text-text-muted">
             No projects yet. Create one with your API URL (including localhost) to discover
@@ -162,6 +175,17 @@ export default function ProjectsPage() {
           </div>
         )}
       </main>
+
+      {creating ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-bg/80 p-4 backdrop-blur-sm">
+          <ProbeLoader
+            title="Connecting to your API"
+            message={`Searching ${baseUrl || "the host"} for a spec and live routes…`}
+            baseUrl={baseUrl}
+            phase="discover"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
