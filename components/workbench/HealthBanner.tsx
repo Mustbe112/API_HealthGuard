@@ -75,13 +75,17 @@ export function HealthBanner({
   const req = summary.firstBroken?.request;
 
   return (
-    <section className="rounded-md border border-line bg-surface p-6">
-      <p className="text-xs text-text-muted">Last run {summary.lastRunAt}</p>
-      <p className="mt-1 text-sm text-text">
-        {plainSummary(summary.workingCount, summary.manualCount, summary.brokenCount)}
-      </p>
+    <section className="rounded-md border border-line bg-surface p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm text-text">
+          {plainSummary(summary.workingCount, summary.manualCount, summary.brokenCount)}
+        </p>
+        <p className="text-xs text-text-muted">
+          Last run {summary.lastRunAt} · Score {summary.score}/100
+        </p>
+      </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <Bucket
           tone="healthy"
           title="Working"
@@ -205,7 +209,6 @@ export function HealthBanner({
       <div className="mt-4">
         <ExplainPanel projectId={projectId} runId={runId} label="Explain this run" />
       </div>
-      <p className="mt-3 text-xs text-text-muted">Score {summary.score} / 100</p>
     </section>
   );
 }
@@ -233,10 +236,10 @@ function Bucket({
     tone === "healthy" ? "text-healthy" : tone === "warning" ? "text-warning" : "text-unhealthy";
 
   return (
-    <div className={`flex flex-col rounded-md border p-4 ${wrap}`}>
-      <p className={`text-2xl font-semibold ${number}`}>{count}</p>
-      <p className="mt-1 text-sm font-medium text-text">{title}</p>
-      <p className="mt-1 flex-1 text-xs text-text-muted">{body}</p>
+    <div className={`flex min-h-[132px] flex-col rounded-md border p-4 ${wrap}`}>
+      <p className={`text-2xl font-semibold leading-none ${number}`}>{count}</p>
+      <p className="mt-2 text-sm font-medium text-text">{title}</p>
+      <p className="mt-1 flex-1 text-xs leading-snug text-text-muted">{body}</p>
       {action ? <div className="mt-3">{action}</div> : null}
     </div>
   );
