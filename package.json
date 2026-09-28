@@ -11,6 +11,7 @@
     "dev": "concurrently -n backend,frontend -c yellow,cyan \"npm:dev:backend\" \"npm:dev:frontend\"",
     "dev:backend": "tsx watch backend/src/index.ts",
     "dev:frontend": "next dev",
+    "build": "next build",
     "build:frontend": "next build",
     "start:backend": "node backend/dist/index.js",
     "start:frontend": "next start --hostname 0.0.0.0",

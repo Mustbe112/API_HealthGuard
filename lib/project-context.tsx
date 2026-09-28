@@ -10,6 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import { api, ApiError } from "./api";
+import { discoverLocalApi, LocalDiscoverError } from "./browser-discover";
+import { probeLocalEndpoint } from "./browser-run";
+import { isLocalHttpTarget } from "./local-target";
 import { useAuth } from "./auth-context";
 import { classifyOutcome, rollupResultsByEndpoint, summarizeOutcomes } from "./outcome";
 import {
@@ -174,10 +177,44 @@ export function ProjectProvider({
   }, [token, projectId, selectedRun?.id, selectedRun?.status]);
 
   const startRun = useCallback(async () => {
-    if (!token) return;
+    if (!token || !project) return;
     setRunning(true);
     setError(null);
     try {
+      if (isLocalHttpTarget(project.baseUrl)) {
+        const prepared = await api.prepareLocalRun(token, projectId, dryRun);
+        setSelectedRun(prepared.testRun);
+        setRuns((prev) => [prepared.testRun, ...prev.filter((r) => r.id !== prepared.testRun.id)]);
+        const vars = prepared.variables;
+        const authToken = vars.API_TOKEN ?? vars.TOKEN ?? vars.ACCESS_TOKEN ?? vars.JWT ?? null;
+        const writes = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+        const results = [];
+        for (const endpoint of prepared.endpoints) {
+          if (dryRun && writes.has(endpoint.method)) {
+            results.push({
+              endpointId: endpoint.id,
+              statusCode: null,
+              responseTimeMs: null,
+              passed: true,
+              errorMessage: "Skipped (dry run — write request not sent)",
+              responseBody: null,
+              probe: {
+                sent: "Nothing (dry run)",
+                expected: [endpoint.expectedStatus],
+                proves: "Write skipped — enable a full run to probe this route",
+              },
+            });
+            continue;
+          }
+          results.push(await probeLocalEndpoint(endpoint, prepared.baseUrl, vars, authToken));
+        }
+        const { testRun } = await api.completeLocalRun(token, projectId, prepared.testRun.id, results);
+        setSelectedRun(testRun);
+        setRuns((prev) => [testRun, ...prev.filter((r) => r.id !== testRun.id)]);
+        setRunning(false);
+        return;
+      }
+
       const { testRun } = await api.triggerRun(token, projectId, dryRun);
       setSelectedRun(testRun);
       setRuns((prev) => [testRun, ...prev.filter((r) => r.id !== testRun.id)]);
@@ -185,14 +222,33 @@ export function ProjectProvider({
       setError(err instanceof ApiError ? err.message : "Run failed");
       setRunning(false);
     }
-  }, [token, projectId, dryRun]);
+  }, [token, project, projectId, dryRun]);
 
   const discoverFromBaseUrl = useCallback(async () => {
-    if (!token) return;
+    if (!token || !project) return;
     setDiscovering(true);
     setError(null);
     setUploadMsg("Searching this host for a spec and live routes…");
     try {
+      if (isLocalHttpTarget(project.baseUrl)) {
+        setUploadMsg("Probing this API from your browser (Railway cannot see localhost)…");
+        const found = await discoverLocalApi(project.baseUrl);
+        const res =
+          found.kind === "spec"
+            ? await api.ingestSpec(token, projectId, found.specText, found.filename)
+            : await api.ingestEndpoints(token, projectId, found.endpoints);
+        await loadProject();
+        if (res.count > 0) {
+          setUploadMsg(`Found ${res.count} endpoint(s). Running tests from your browser…`);
+          await startRun();
+        } else {
+          setUploadMsg(
+            "Reached the API but found no JSON routes. Upload an OpenAPI/Postman spec, or add CORS so this site can read responses."
+          );
+        }
+        return;
+      }
+
       const res = await api.discoverSpec(token, projectId);
       await loadProject();
       if (res.count > 0) {
@@ -205,11 +261,13 @@ export function ProjectProvider({
         );
       }
     } catch (err) {
-      setUploadMsg(err instanceof ApiError ? err.message : "Discovery failed");
+      setUploadMsg(
+        err instanceof LocalDiscoverError || err instanceof ApiError ? err.message : "Discovery failed"
+      );
     } finally {
       setDiscovering(false);
     }
-  }, [token, projectId, loadProject, startRun]);
+  }, [token, project, projectId, loadProject, startRun]);
 
   const uploadSpec = useCallback(
     async (file: File) => {

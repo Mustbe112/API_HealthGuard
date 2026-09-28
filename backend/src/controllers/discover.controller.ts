@@ -14,6 +14,20 @@ async function discoverSpecHandler(req: Request, res: Response) {
   });
   if (!project) return res.status(404).json({ error: "Project not found" });
 
+  try {
+    const host = new URL(project.baseUrl).hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
+      return res.status(409).json({
+        error:
+          "This Base URL is on the user's machine. Discovery must run in the browser, not on the Railway server.",
+        count: 0,
+        source: "none",
+      });
+    }
+  } catch {
+    // invalid URL is handled by discoverEndpoints
+  }
+
   let result;
   try {
     result = await discoverEndpoints(project.baseUrl);

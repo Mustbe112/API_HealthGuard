@@ -1,4 +1,6 @@
-import type { EnvVariable, ManualTryResult, Project, TestRun, User } from "./types";
+import type { DiscoveredEndpoint } from "./browser-discover";
+import type { BrowserProbeResult } from "./browser-run";
+import type { Endpoint, EnvVariable, ManualTryResult, Project, TestRun, User } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -101,6 +103,45 @@ export const api = {
       method: "POST",
       token,
       body: JSON.stringify({}),
+    }),
+
+  ingestSpec: (token: string, projectId: string, specText: string, filename?: string) =>
+    request<{ source: string; count: number; endpoints: Endpoint[] }>(
+      `/projects/${projectId}/ingest-spec`,
+      {
+        method: "POST",
+        token,
+        body: JSON.stringify({ specText, filename }),
+      }
+    ),
+
+  ingestEndpoints: (token: string, projectId: string, endpoints: DiscoveredEndpoint[]) =>
+    request<{ source: string; count: number; endpoints: Endpoint[] }>(
+      `/projects/${projectId}/ingest-endpoints`,
+      {
+        method: "POST",
+        token,
+        body: JSON.stringify({ endpoints }),
+      }
+    ),
+
+  prepareLocalRun: (token: string, projectId: string, dryRun: boolean) =>
+    request<{
+      testRun: TestRun;
+      endpoints: Endpoint[];
+      baseUrl: string;
+      variables: Record<string, string>;
+    }>(`/projects/${projectId}/run/prepare-local`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({ dryRun }),
+    }),
+
+  completeLocalRun: (token: string, projectId: string, runId: string, results: BrowserProbeResult[]) =>
+    request<{ testRun: TestRun }>(`/projects/${projectId}/runs/${runId}/complete-local`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({ results, status: "COMPLETED" }),
     }),
 
   triggerRun: (token: string, projectId: string, dryRun: boolean) =>

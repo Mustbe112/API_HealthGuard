@@ -125,8 +125,8 @@ export default function ProjectsPage() {
                 placeholder="http://localhost:4000"
               />
               <p className="mt-1.5 text-xs text-text-muted">
-                We will look for OpenAPI/Swagger on this host, then probe live JSON routes. Use the
-                API process (for example localhost:4000), not the website.
+                Use the API process, for example <span className="font-mono">http://localhost:5000</span>,
+                not this website. On Railway, localhost is probed from your browser — that API must allow CORS.
               </p>
             </div>
             <Button type="submit" disabled={creating} className="!bg-run !text-white">

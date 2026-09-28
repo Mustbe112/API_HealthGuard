@@ -75,6 +75,7 @@ export default function EndpointDetailPage({
             <EndpointTester
               token={token}
               projectId={projectId}
+              baseUrl={project.baseUrl}
               endpoints={project.endpoints ?? []}
               selectedId={endpointId}
               onSelect={(id) => router.push(`/projects/${projectId}/endpoints/${id}?tab=try`)}

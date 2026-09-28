@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { tryLocalEndpoint } from "@/lib/browser-run";
+import { isLocalHttpTarget } from "@/lib/local-target";
 import type { Endpoint, HttpMethod, ManualTryResult } from "@/lib/types";
 import { Button } from "@/components/Button";
 import { MethodBadge } from "@/components/MethodBadge";
@@ -63,12 +65,13 @@ function pairsToRecord(pairs: Pair[]): Record<string, string> {
 interface Props {
   token: string;
   projectId: string;
+  baseUrl?: string;
   endpoints: Endpoint[];
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
 
-export function EndpointTester({ token, projectId, endpoints, selectedId, onSelect }: Props) {
+export function EndpointTester({ token, projectId, baseUrl, endpoints, selectedId, onSelect }: Props) {
   const selected = endpoints.find((e) => e.id === selectedId) ?? endpoints[0] ?? null;
   const paramNames = useMemo(() => (selected ? pathParamNames(selected.path) : []), [selected]);
   const needsBody = selected ? BODY_METHODS.has(selected.method) : false;
@@ -112,13 +115,27 @@ export function EndpointTester({ token, projectId, endpoints, selectedId, onSele
     setSending(true);
     setError(null);
     try {
-      const { result: next } = await api.tryEndpoint(token, projectId, selected.id, {
-        pathParams,
-        query: pairsToRecord(queryPairs),
-        headers: pairsToRecord(headerPairs),
-        body: needsBody ? body : undefined,
-        bearerToken: bearerToken.trim() || undefined,
-      });
+      const next =
+        baseUrl && isLocalHttpTarget(baseUrl)
+          ? await tryLocalEndpoint({
+              baseUrl,
+              method: selected.method,
+              pathTemplate: selected.path,
+              pathParams,
+              query: pairsToRecord(queryPairs),
+              headers: pairsToRecord(headerPairs),
+              body: needsBody ? body : undefined,
+              bearerToken: bearerToken.trim() || undefined,
+            })
+          : (
+              await api.tryEndpoint(token, projectId, selected.id, {
+                pathParams,
+                query: pairsToRecord(queryPairs),
+                headers: pairsToRecord(headerPairs),
+                body: needsBody ? body : undefined,
+                bearerToken: bearerToken.trim() || undefined,
+              })
+            ).result;
       setResult(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Request failed");

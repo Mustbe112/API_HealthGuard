@@ -7,6 +7,12 @@ import { triggerRun, getRun, listRuns } from "../controllers/testRun.controller"
 import { explainRun } from "../controllers/explain.controller";
 import { tryEndpoint } from "../controllers/try.controller";
 import {
+  ingestSpec,
+  ingestEndpoints,
+  prepareBrowserRun,
+  completeBrowserRun,
+} from "../controllers/ingest.controller";
+import {
   setProjectVariable,
   listProjectVariables,
   deleteProjectVariable,
@@ -23,10 +29,14 @@ router.patch("/:projectId", updateProject);
 router.delete("/:projectId", deleteProject);
 router.post("/:projectId/upload", uploadMiddleware, uploadSpec);
 router.post("/:projectId/discover", discoverSpec);
+router.post("/:projectId/ingest-spec", ingestSpec);
+router.post("/:projectId/ingest-endpoints", ingestEndpoints);
 router.patch("/:projectId/endpoints/:endpointId", updateEndpoint);
 router.post("/:projectId/endpoints/:endpointId/try", tryEndpoint);
 
 router.post("/:projectId/run", triggerRun);
+router.post("/:projectId/run/prepare-local", prepareBrowserRun);
+router.post("/:projectId/runs/:runId/complete-local", completeBrowserRun);
 router.post("/:projectId/explain", explainRun);
 router.get("/:projectId/runs", listRuns);
 router.get("/:projectId/runs/:runId", getRun);

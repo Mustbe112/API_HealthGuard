@@ -49,7 +49,8 @@ export default function DashboardPage() {
       <div className="rounded-md border border-line bg-surface p-8 text-center">
         <p className="text-sm text-text-muted">
           No endpoints yet. Discovery from the API Base URL may only find GET routes. Import an
-          OpenAPI or Swagger spec to add the rest.
+          OpenAPI or Swagger spec to add the rest. If this project uses localhost on the Railway
+          site, that API must allow CORS from this website.
         </p>
         <button
           type="button"

@@ -1,0 +1,17 @@
+FROM node:20-bookworm-slim
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+RUN npm ci
+
+COPY . .
+RUN npx prisma generate && npm run build:backend
+
+ENV NODE_ENV=production
+EXPOSE 8080
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:backend"]
