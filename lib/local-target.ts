@@ -21,8 +21,19 @@ export function isLocalHttpTarget(raw: string): boolean {
 }
 
 export function localTargetError(baseUrl: string): string {
+  try {
+    const url = new URL(baseUrl);
+    if (url.port === "3000" || url.port === "5173") {
+      return (
+        `${url.origin} looks like a website (Next/Vite), not an API. Create a new project and set Base URL to the API process, ` +
+        `for example http://localhost:4000 or http://localhost:5000 — the port you see when you start that other project.`
+      );
+    }
+  } catch {
+    // fall through
+  }
   return (
-    `This Railway site cannot see ${baseUrl} from the server, so it probes from your browser. ` +
-    `Start that API on this computer, and allow CORS from this website. Express example:\n\n${LOCAL_CORS_SNIPPET}`
+    `This site reached ${baseUrl} but the browser blocked the responses (CORS). ` +
+    `Add this to the API you are testing (not to HealthGuard):\n\n${LOCAL_CORS_SNIPPET}`
   );
 }

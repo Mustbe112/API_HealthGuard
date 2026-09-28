@@ -12,6 +12,7 @@ import { LatencyBar } from "@/components/LatencyBar";
 import { HealthCharts } from "@/components/workbench/HealthCharts";
 import { PageHeader } from "@/components/workbench/PageHeader";
 import { PageLoader, ProbeLoader } from "@/components/LoadingState";
+import { LocalDiscoverHelp } from "@/components/workbench/LocalDiscoverHelp";
 
 type Filter = "all" | "working" | "login" | "broken";
 
@@ -59,7 +60,9 @@ export default function DashboardPage() {
         >
           Import spec
         </button>
-        {uploadMsg && <p className="mt-3 text-xs text-text-muted">{uploadMsg}</p>}
+        {uploadMsg && (
+          <LocalDiscoverHelp message={uploadMsg} baseUrl={project.baseUrl} />
+        )}
       </div>
     );
   }
